@@ -1,0 +1,9 @@
+{
+  "name": "order-manager",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Guilherme Rauen",
+  "description": "Sample of an Order Management System using Domain-Driven Design (DDD).",
+  "main": "index.js",
+  "scripts": {}
+}
