@@ -2,6 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import { Server } from 'http';
 
+import { InstanceNotFoundException } from './domain/exceptions';
 import { Logger } from './logger.module';
 
 export class AppModule {
@@ -35,6 +36,6 @@ export class AppModule {
       return;
     }
 
-    throw new Error('Server not started');
+    throw new InstanceNotFoundException('Server not started');
   }
 }
