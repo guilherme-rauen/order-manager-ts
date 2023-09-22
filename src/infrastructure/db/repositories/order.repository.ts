@@ -1,0 +1,197 @@
+import mongoose, { Model } from 'mongoose';
+
+import { Order, OrderStatus } from '../../../domain';
+import { ObjectNotFoundException } from '../../../domain/exceptions';
+import { IOrder, IOrderRepository } from '../../../domain/interfaces';
+import { Logger } from '../../../logger.module';
+import { OrderMapper } from '../mappers';
+import { OrderSchema } from '../mongo/schemas';
+
+export class OrderRepository implements IOrderRepository {
+  private readonly model = 'Order';
+
+  private readonly module = 'OrderRepository';
+
+  /**
+   * @description
+   * Repository is a mongoose model that represents the Order collection in mongo
+   */
+  private readonly repository: Model<IOrder>;
+
+  /**
+   *
+   * @param {typeof mongoose} connection  - The connection to mongo
+   * @param {Logger} logger - The logger module
+   * @param {OrderMapper} mapper - The order mapper to map from domain to model and vice versa
+   */
+  constructor(
+    private readonly connection: typeof mongoose,
+    private readonly logger: Logger,
+    private readonly mapper: OrderMapper,
+  ) {
+    this.repository = this.connection.model(this.model, OrderSchema);
+  }
+
+  /**
+   *
+   * @param {IOrder} order - The order to be added
+   * @returns {Promise<Order>} - Returns a promise that resolves to an Order
+   *
+   * @throws {Error} - If there is an error adding the order
+   *
+   * @description
+   * Adds an order to the database
+   */
+  private async add(order: IOrder): Promise<Order> {
+    try {
+      const createdOrder = await this.repository.create(order);
+      return this.mapper.mapToDomain(createdOrder);
+    } catch (error) {
+      this.logger.error('Error adding order', {
+        module: this.module,
+        orderId: order.orderId,
+        error,
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   *
+   * @param {IOrder} order - The order to be updated
+   * @returns {Promise<Order>} - Returns a promise that resolves to an Order
+   *
+   * @throws {ObjectNotFoundException} - If the order does not exist
+   * @throws {Error} - If there is an error updating the order
+   *
+   * @description
+   * Updates an order in the database
+   *
+   */
+  private async update(order: IOrder): Promise<Order> {
+    try {
+      const updatedOrder = await this.repository.findOneAndUpdate(
+        { orderId: order.orderId },
+        order,
+        { new: true },
+      );
+
+      if (!updatedOrder) {
+        throw new ObjectNotFoundException(this.model, order.orderId);
+      }
+
+      return this.mapper.mapToDomain(updatedOrder);
+    } catch (error) {
+      this.logger.error('Error updating order', {
+        module: this.module,
+        orderId: order.orderId,
+        error,
+      });
+
+      throw error;
+    }
+  }
+
+  public async getAllOrders(): Promise<Order[]> {
+    try {
+      const orders = await this.repository.find();
+      return orders.map(order => this.mapper.mapToDomain(order));
+    } catch (error) {
+      this.logger.error('Error getting all orders', { module: this.module, error });
+      throw error;
+    }
+  }
+
+  public async getOrdersByCustomerId(customerId: string): Promise<Order[]> {
+    try {
+      const orders = await this.repository.find({ customerId });
+      return orders.map(order => this.mapper.mapToDomain(order));
+    } catch (error) {
+      this.logger.error('Error getting orders by customer id', {
+        module: this.module,
+        customerId,
+        error,
+      });
+
+      throw error;
+    }
+  }
+
+  public async getOrderById(orderId: string): Promise<Order> {
+    try {
+      const order = await this.repository.findOne({ orderId });
+      if (!order) {
+        throw new ObjectNotFoundException(this.model, orderId);
+      }
+
+      return this.mapper.mapToDomain(order);
+    } catch (error) {
+      this.logger.error('Error getting order by id', { module: this.module, error });
+      throw error;
+    }
+  }
+
+  public async getOrdersByStatus(status: OrderStatus): Promise<Order[]> {
+    try {
+      const orders = await this.repository.find({ status });
+      return orders.map(order => this.mapper.mapToDomain(order));
+    } catch (error) {
+      this.logger.error('Error getting orders by status', { module: this.module, error });
+      throw error;
+    }
+  }
+
+  /**
+   *
+   * @param {String} orderId - The id of the order to be deleted
+   * @returns {Promise<void>} - Returns a promise that resolves to void
+   *
+   * @throws {ObjectNotFoundException} - If the order does not exist
+   * @throws {Error} - If there is an error deleting the order
+   *
+   * @description
+   * Deletes an order from the database
+   *
+   */
+  public async remove(orderId: string): Promise<void> {
+    try {
+      const deletedOrder = await this.repository.findOneAndDelete({ orderId });
+      if (!deletedOrder) {
+        throw new ObjectNotFoundException(this.model, orderId);
+      }
+
+      return;
+    } catch (error) {
+      this.logger.error('Error deleting order', { module: this.module, orderId, error });
+      throw error;
+    }
+  }
+
+  /**
+   *
+   * @param {Order} order - The order to be stored
+   * @returns {Promise<Order>} - Returns a promise that resolves to an Order
+   *
+   * @throws {Error} - If there is an error storing the order
+   *
+   * @description
+   * Stores an order to the database
+   *
+   */
+  public async store(order: Order): Promise<Order> {
+    try {
+      const orderModel = this.mapper.mapToModel(order);
+      const existentOrder = await this.repository.findOne({ orderId: order.orderId });
+
+      if (existentOrder) {
+        return await this.update(orderModel);
+      } else {
+        return await this.add(orderModel);
+      }
+    } catch (error) {
+      this.logger.error('Error saving order', { module: this.module, error });
+      throw error;
+    }
+  }
+}
