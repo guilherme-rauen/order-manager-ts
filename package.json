@@ -5,7 +5,11 @@
   "author": "Guilherme Rauen",
   "description": "Sample of an Order Management System using Domain-Driven Design (DDD).",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint --ext=.ts ./src",
+    "lint:fix": "eslint --ext=.ts ./src --fix"
+  },
   "dependencies": {
     "pino": "8.15.1",
     "pino-pretty": "10.2.0"
