@@ -18,18 +18,20 @@ export class Order {
     orderId,
     orderDate,
     orderItems,
+    status,
     customerId,
   }: {
     orderId: string;
     orderDate: Date;
     orderItems: OrderItem[];
+    status: OrderStatus;
     customerId: string;
   }) {
     this.customerId = customerId;
     this.orderDate = orderDate;
     this.orderId = orderId;
     this.orderItems = orderItems;
-    this.status = OrderStatus.PENDING;
+    this.status = status;
     this.totalAmount = this.calculateTotalAmount();
   }
 
