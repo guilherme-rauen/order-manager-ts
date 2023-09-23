@@ -236,7 +236,7 @@ export class OrderRepository implements IOrderRepository {
         return await this.add(orderModel);
       }
     } catch (error) {
-      this.logger.error('Error saving order', { module: this.module, error });
+      this.logger.error('Error storing order', { module: this.module, error });
       throw error;
     }
   }
