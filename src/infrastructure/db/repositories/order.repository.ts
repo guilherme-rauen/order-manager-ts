@@ -20,9 +20,10 @@ export class OrderRepository implements IOrderRepository {
 
   /**
    *
-   * @param {typeof mongoose} connection  - The connection to mongo
+   * @param {mongoose} connection  - The connection to mongo
    * @param {Logger} logger - The logger module
    * @param {OrderMapper} mapper - The order mapper to map from domain to model and vice versa
+   *
    */
   constructor(
     private readonly connection: typeof mongoose,
@@ -41,6 +42,7 @@ export class OrderRepository implements IOrderRepository {
    *
    * @description
    * Adds an order to the database
+   *
    */
   private async add(order: IOrder): Promise<Order> {
     try {
@@ -93,6 +95,16 @@ export class OrderRepository implements IOrderRepository {
     }
   }
 
+  /**
+   *
+   * @returns {Promise<Order[]>} - Returns a promise that resolves to an array of Orders
+   *
+   * @throws {Error} - If there is an error getting all orders
+   *
+   * @description
+   * Gets all orders from the database
+   *
+   */
   public async getAllOrders(): Promise<Order[]> {
     try {
       const orders = await this.repository.find();
@@ -103,6 +115,17 @@ export class OrderRepository implements IOrderRepository {
     }
   }
 
+  /**
+   *
+   * @param {String} customerId - The id of the customer to get orders for
+   * @returns {Promise<Order[]>} - Returns a promise that resolves to an array of Orders
+   *
+   * @throws {Error} - If there is an error getting orders by customer id
+   *
+   * @description
+   * Gets all orders for a customer from the database
+   *
+   */
   public async getOrdersByCustomerId(customerId: string): Promise<Order[]> {
     try {
       const orders = await this.repository.find({ customerId });
@@ -118,6 +141,18 @@ export class OrderRepository implements IOrderRepository {
     }
   }
 
+  /**
+   *
+   * @param {String} orderId - The id of the order to get
+   * @returns {Promise<Order>} - Returns a promise that resolves to an Order
+   *
+   * @throws {ObjectNotFoundException} - If the order does not exist
+   * @throws {Error} - If there is an error getting the order by id
+   *
+   * @description
+   * Gets an order by id from the database
+   *
+   */
   public async getOrderById(orderId: string): Promise<Order> {
     try {
       const order = await this.repository.findOne({ orderId });
@@ -132,6 +167,17 @@ export class OrderRepository implements IOrderRepository {
     }
   }
 
+  /**
+   *
+   * @param {OrderStatus} status - The status of the order to get
+   * @returns {Promise<Order[]>} - Returns a promise that resolves to an array of Orders
+   *
+   * @throws {Error} - If there is an error getting orders by status
+   *
+   * @description
+   * Gets all orders by status from the database
+   *
+   */
   public async getOrdersByStatus(status: OrderStatus): Promise<Order[]> {
     try {
       const orders = await this.repository.find({ status });
