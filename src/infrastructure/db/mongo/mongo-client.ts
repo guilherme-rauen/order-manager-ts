@@ -15,14 +15,18 @@ export class MongoClient {
       return this.connection;
     }
 
-    const { MONGO_URI } = process.env;
+    const { APP_NAME, MONGO_URI } = process.env;
     if (!MONGO_URI) {
       this.logger.error('MONGO_URI not found', { module: this.module });
       throw new MissingEnvVarException('MONGO_URI not found');
     }
 
     try {
-      this.connection = await mongoose.connect(MONGO_URI);
+      this.connection = await mongoose.connect(MONGO_URI, {
+        authMechanism: 'DEFAULT',
+        dbName: APP_NAME || 'test',
+      });
+
       this.logger.debug('Database connected', { module: this.module });
       return this.connection;
     } catch (error) {
