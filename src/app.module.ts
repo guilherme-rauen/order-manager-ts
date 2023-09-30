@@ -2,23 +2,62 @@ import express from 'express';
 import helmet from 'helmet';
 import { Server } from 'http';
 
+import { OrderService } from './application';
 import { InstanceNotFoundException } from './domain/exceptions';
+import { OrderController } from './handlers/controllers/v1';
+import { DatabaseModule } from './infrastructure/db/database.module';
+import { OrderMapper } from './infrastructure/db/mappers';
+import { MongoClient } from './infrastructure/db/mongo/mongo-client';
+import { OrderRepository } from './infrastructure/db/repositories';
 import { Logger } from './logger.module';
 
 export class AppModule {
   private readonly module = 'AppModule';
 
+  private mongoClient?: MongoClient;
+
+  private databaseModule?: DatabaseModule;
+
+  private orderController?: OrderController;
+
+  private orderMapper?: OrderMapper;
+
+  private orderRepository?: OrderRepository;
+
+  private orderService?: OrderService;
+
   private server?: Server;
 
   constructor(private readonly logger: Logger) {}
 
-  public start(): void {
+  public async start(): Promise<void> {
+    /** Instantiate the MongoDB Client */
+    this.mongoClient = new MongoClient(this.logger);
+
+    /** Instantiate the Database Module */
+    this.databaseModule = new DatabaseModule(this.mongoClient);
+    const connection = await this.databaseModule.connect();
+
+    /** Instantiate the Mappers */
+    this.orderMapper = new OrderMapper();
+
+    /** Instantiate the Repositories */
+    this.orderRepository = new OrderRepository(connection, this.logger, this.orderMapper);
+
+    /** Instantiate the Services */
+    this.orderService = new OrderService(this.logger, this.orderRepository);
+
+    /** Instantiate the Controllers */
+    this.orderController = new OrderController(this.logger, this.orderService);
+
     /** Instantiate and Start the Express Server */
     const port = parseInt(process.env.PORT ?? '3000', 10);
     const app = express();
     app.use(express.json());
     app.use(helmet());
     app.disable('x-powered-by');
+
+    app.use('/api', this.orderController.router);
 
     this.server = app.listen(port, () => {
       this.logger.debug(`Server up & running at http://localhost:${port}`, {

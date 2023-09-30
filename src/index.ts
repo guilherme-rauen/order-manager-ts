@@ -9,7 +9,7 @@ try {
   const logger = new Logger(process.env.APP_NAME ?? '');
   const app = new AppModule(logger);
   const main = async (): Promise<void> => {
-    app.start();
+    await app.start();
   };
 
   main().catch(error => {
