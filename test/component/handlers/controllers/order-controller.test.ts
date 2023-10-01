@@ -28,9 +28,10 @@ describe('OrderController', () => {
   } as unknown as Logger;
 
   const date = new Date();
+  const orderId = 'ORD-23-0WH1B71878';
   const price = 17.99;
   const modelOrder: IOrder = {
-    orderId: '550e8400-e29b-41d4-a716-446655440000',
+    orderId,
     orderDate: date,
     orderItems: [
       {
@@ -44,14 +45,8 @@ describe('OrderController', () => {
     customerId: '550e8400-e29b-41d4-a716-446655440002',
   };
   const payload = {
-    customerId: '550e8400-e29b-41d4-a716-446655440002',
-    orderItems: [
-      {
-        productId: '550e8400-e29b-41d4-a716-446655440001',
-        quantity: 1,
-        unitPrice: 17.99,
-      },
-    ],
+    customerId: modelOrder.customerId,
+    orderItems: modelOrder.orderItems,
   };
 
   beforeEach(() => {
@@ -142,13 +137,13 @@ describe('OrderController', () => {
     it('should return 200 (OK) on success', async () => {
       (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
       const result = await request(server)
-        .get(`/api/v1/orders/${modelOrder.orderId}`)
+        .get(`/api/v1/orders/${orderId}`)
         .set('x-api-key', envVars.API_SECRET)
         .expect(200);
 
       expect(result.body.customerId).toBe(modelOrder.customerId);
       expect(result.body.orderDate).toBe(date.toISOString());
-      expect(result.body.orderId).toBe(modelOrder.orderId);
+      expect(result.body.orderId).toBe(orderId);
       expect(result.body.orderItems).toHaveLength(1);
       expect(result.body.orderItems[0].productId).toBe(modelOrder.orderItems[0].productId);
       expect(result.body.orderItems[0].quantity).toBe(modelOrder.orderItems[0].quantity);
@@ -167,16 +162,13 @@ describe('OrderController', () => {
     });
 
     it('should return 401 (Unauthorized) with x-api-key is missing', async () => {
-      const response = await request(server)
-        .get(`/api/v1/orders/${modelOrder.orderId}`)
-        .expect(401);
-
+      const response = await request(server).get(`/api/v1/orders/${orderId}`).expect(401);
       expect(response.body).toBe('Unauthorized');
     });
 
     it('should return 401 (Unauthorized) with x-api-key is invalid', async () => {
       const response = await request(server)
-        .get(`/api/v1/orders/${modelOrder.orderId}`)
+        .get(`/api/v1/orders/${orderId}`)
         .set('x-api-key', 'invalid-api-key')
         .expect(401);
 
@@ -189,7 +181,7 @@ describe('OrderController', () => {
       });
 
       const response = await request(server)
-        .get(`/api/v1/orders/${modelOrder.orderId}`)
+        .get(`/api/v1/orders/${orderId}`)
         .set('x-api-key', envVars.API_SECRET)
         .expect(500);
 
@@ -231,7 +223,7 @@ describe('OrderController', () => {
         .send({
           ...payload,
           orderDate: date.toISOString(),
-          orderId: '550e8400-e29b-41d4-a716-446655440000',
+          orderId,
           status: 'SHIPPED',
         })
         .expect(200);
@@ -258,6 +250,19 @@ describe('OrderController', () => {
         .expect(400);
 
       expect(response.body).toBe('Bad request. Error: Invalid Customer ID');
+    });
+
+    it('should return 400 (Bad Request) with invalid order id', async () => {
+      const response = await request(server)
+        .post('/api/v1/orders')
+        .set('x-api-key', envVars.API_SECRET)
+        .send({
+          ...payload,
+          orderId: 'invalid-order-id',
+        })
+        .expect(400);
+
+      expect(response.body).toBe('Bad request. Error: Invalid Order ID');
     });
 
     it('should return 400 (Bad Request) with invalid order items', async () => {

@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto';
 import { Request, Response, Router } from 'express';
 import { body, header, param, validationResult } from 'express-validator';
 
@@ -66,16 +65,18 @@ export class OrderController {
     );
 
     this.router.get(
-      '/v1/orders/:id',
+      '/v1/orders/:orderId',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
-      param('id').isUUID().withMessage('Invalid Order ID'),
+      param('orderId')
+        .custom(orderId => (Order.validateOrderId(orderId) ? true : false))
+        .withMessage('Invalid Order ID'),
       async (request: Request, response: Response) => {
-        const { id } = request.params;
+        const { orderId } = request.params;
 
         try {
           const errors = validationResult(request);
           if (!errors.isEmpty()) {
-            this.logger.error('API Key validation failed', {
+            this.logger.error('Controller validation error', {
               module: this.module,
               header: request.headers,
               errors,
@@ -89,14 +90,14 @@ export class OrderController {
             endpoint: request.url,
           });
 
-          const orders = await this.service.getOrderDetails(id);
+          const order = await this.service.getOrderDetails(orderId);
 
           this.logger.debug('Order details endpoint responded', {
             module: this.module,
             endpoint: request.url,
           });
 
-          return response.status(200).json(orders);
+          return response.status(200).json(order);
         } catch (error) {
           if (error instanceof ControllerValidationException) {
             if (error.message.includes('Unauthorized')) {
@@ -115,6 +116,10 @@ export class OrderController {
       '/v1/orders',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
       body('customerId').isUUID().withMessage('Invalid Customer ID'),
+      body('orderId')
+        .custom(orderId => (Order.validateOrderId(orderId) ? true : false))
+        .withMessage('Invalid Order ID')
+        .optional(),
       body('orderItems').isArray().withMessage('Invalid Order Items'),
       body('orderItems.*.productId').isUUID().withMessage('Invalid Product ID'),
       body('orderItems.*.quantity').isInt({ min: 1 }).withMessage('Invalid Quantity'),
@@ -125,7 +130,7 @@ export class OrderController {
         try {
           const errors = validationResult(request);
           if (!errors.isEmpty()) {
-            this.logger.error('API Key validation failed', {
+            this.logger.error('Controller validation error', {
               module: this.module,
               header: request.headers,
               errors,
@@ -142,7 +147,7 @@ export class OrderController {
           const order = new Order({
             customerId,
             orderDate: orderDate ? new Date(orderDate) : new Date(),
-            orderId: orderId ?? randomUUID(),
+            orderId,
             orderItems,
             status: status ? new OrderStatus(status) : new OrderStatus('Pending'),
           });
