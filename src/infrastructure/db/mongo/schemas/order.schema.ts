@@ -3,7 +3,7 @@ import { Schema } from 'mongoose';
 import { IOrder, IOrderItem } from '../../../../domain/interfaces';
 
 const OrderItemSchema = new Schema<IOrderItem>({
-  productId: { type: String, required: true },
+  productId: { type: String, primary: true, required: true },
   quantity: { type: Number, required: true },
   unitPrice: { type: Number, required: true },
 });
