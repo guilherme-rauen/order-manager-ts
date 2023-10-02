@@ -3,7 +3,7 @@
 ```
 # Setup
 
-rename .env.dist => .env               # set up environment variables locally
+rename .env.sample => .env             # set up environment variables locally
 npm ci                                 # install dependencies
 
 # Local Testing
