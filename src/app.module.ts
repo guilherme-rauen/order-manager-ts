@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 
 import { OrderService } from './application';
 import { InstanceNotFoundException } from './domain/exceptions';
+import { HealthCheckController } from './handlers/controllers';
 import { OrderController } from './handlers/controllers/v1';
 import { DatabaseModule } from './infrastructure/db/database.module';
 import { OrderMapper } from './infrastructure/db/mappers';
@@ -19,6 +20,8 @@ export class AppModule {
   private mongoClient?: MongoClient;
 
   private databaseModule?: DatabaseModule;
+
+  private healthCheckController?: HealthCheckController;
 
   private orderController?: OrderController;
 
@@ -50,6 +53,7 @@ export class AppModule {
     this.orderService = new OrderService(this.logger, this.orderRepository);
 
     /** Instantiate the Controllers */
+    this.healthCheckController = new HealthCheckController();
     this.orderController = new OrderController(this.logger, this.orderService);
 
     /** Instantiate and Start the Express Server */
@@ -73,6 +77,7 @@ export class AppModule {
 
     app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(apiDocs));
     app.use('/api', this.orderController.router);
+    app.use('/', this.healthCheckController.router);
 
     this.server = app.listen(port, () => {
       this.logger.debug(`Server up & running at http://localhost:${port}`, {
