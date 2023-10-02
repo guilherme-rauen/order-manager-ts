@@ -6,6 +6,51 @@ import { Order, OrderStatus } from '../../../domain';
 import { ControllerValidationException, MissingEnvVarException } from '../../../domain/exceptions';
 import { Logger } from '../../../logger.module';
 
+/**
+ * @openapi
+ * components:
+ *  schemas:
+ *    Order:
+ *      type: object
+ *      properties:
+ *        customerId:
+ *          type: string
+ *          format: uuid
+ *        orderDate:
+ *          type: string
+ *          format: date-time
+ *        orderId:
+ *          type: string
+ *          example: ORD-23-0WH1B71878
+ *        orderItems:
+ *          type: array
+ *          items:
+ *            $ref: '#/components/schemas/OrderItems'
+ *      required:
+ *        - customerId
+ *        - orderItems
+ *
+ *    OrderItems:
+ *      type: object
+ *      properties:
+ *        productId:
+ *          type: string
+ *          format: uuid
+ *        quantity:
+ *          type: integer
+ *          format: int32
+ *          minimum: 1
+ *          example: 2
+ *        unitPrice:
+ *          type: number
+ *          format: float
+ *          minimum: 0
+ *          example: 17.95
+ *      required:
+ *        - productId
+ *        - quantity
+ *        - unitPrice
+ */
 export class OrderController {
   private readonly module = 'OrderController';
 
@@ -25,6 +70,47 @@ export class OrderController {
       throw new MissingEnvVarException('API_SECRET not defined');
     }
 
+    /**
+     * @openapi
+     * /orders:
+     *  get:
+     *    summary: Retrieve a list of orders
+     *    description: Get all orders
+     *    tags:
+     *      - v1
+     *        - Orders
+     *    parameters:
+     *      - in: header
+     *        name: x-api-key
+     *        schema:
+     *          type: string
+     *        required: true
+     *    responses:
+     *      200:
+     *        description: List of orders
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: array
+     *              items:
+     *                $ref: '#/components/schemas/Order'
+     *      401:
+     *        description: Unauthorized
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Unauthorized
+     *      500:
+     *        description: Internal Server Error
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Internal Server Error
+     *    security:
+     *      - ApiKeyAuth: []
+     */
     this.router.get(
       '/v1/orders',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
@@ -64,6 +150,58 @@ export class OrderController {
       },
     );
 
+    /**
+     * @openapi
+     * /orders/{orderId}:
+     *  get:
+     *    summary: Retrieve an order details
+     *    description: Get an order
+     *    tags:
+     *      - v1
+     *        - Orders
+     *    parameters:
+     *      - in: header
+     *        name: x-api-key
+     *        schema:
+     *          type: string
+     *        required: true
+     *      - in: path
+     *        name: orderId
+     *        schema:
+     *          type: string
+     *          example: ORD-23-0WH1B71878
+     *        required: true
+     *    responses:
+     *      200:
+     *        description: Order details
+     *        content:
+     *          application/json:
+     *            schema:
+     *              $ref: '#/components/schemas/Order'
+     *      400:
+     *        description: Bad request
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Invalid Order ID
+     *      401:
+     *        description: Unauthorized
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Unauthorized
+     *      500:
+     *        description: Internal Server Error
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Internal Server Error
+     *    security:
+     *      - ApiKeyAuth: []
+     */
     this.router.get(
       '/v1/orders/:orderId',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
@@ -112,6 +250,59 @@ export class OrderController {
       },
     );
 
+    /**
+     * @openapi
+     * /orders:
+     *  post:
+     *    summary: Create or update an order
+     *    description: Upsert an order
+     *    tags:
+     *      - v1
+     *        - Orders
+     *    requestBody:
+     *      description: Order object
+     *      required: true
+     *      content:
+     *        application/json:
+     *          schema:
+     *            $ref: '#/components/schemas/Order'
+     *    parameters:
+     *      - in: header
+     *        name: x-api-key
+     *        schema:
+     *          type: string
+     *        required: true
+     *    responses:
+     *      200:
+     *        description: Order details
+     *        content:
+     *          application/json:
+     *            schema:
+     *              $ref: '#/components/schemas/Order'
+     *      400:
+     *        description: Bad request
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Invalid Order ID
+     *      401:
+     *        description: Unauthorized
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Unauthorized
+     *      500:
+     *        description: Internal Server Error
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Internal Server Error
+     *    security:
+     *      - ApiKeyAuth: []
+     */
     this.router.post(
       '/v1/orders',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),

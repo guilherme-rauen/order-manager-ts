@@ -1,6 +1,8 @@
 import express from 'express';
 import helmet from 'helmet';
 import { Server } from 'http';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 import { OrderService } from './application';
 import { InstanceNotFoundException } from './domain/exceptions';
@@ -57,6 +59,19 @@ export class AppModule {
     app.use(helmet());
     app.disable('x-powered-by');
 
+    const options = {
+      definition: {
+        openapi: '3.1.0',
+        info: {
+          title: 'Order Manager API',
+          version: '1.0.0',
+        },
+      },
+      apis: ['src/handlers/controllers/v1/*.ts'],
+    };
+    const apiDocs = swaggerJsdoc(options);
+
+    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(apiDocs));
     app.use('/api', this.orderController.router);
 
     this.server = app.listen(port, () => {
