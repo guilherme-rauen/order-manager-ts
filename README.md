@@ -2,19 +2,21 @@
 
 ![](https://media.giphy.com/media/3o6Mb37UkzBVPLy0fu/giphy.gif)
 
+---
+
 # Overview
 
-The `order-manager` microservice is a dedicated component designed for the core management of orders. It provides a RESTful API that facilitates operations such as creating, retrieving, and updating orders.
+The `order-manager` microservice is a dedicated component designed for the core management of orders. It provides a RESTful API that facilitates operations such as creating, retrieving, and updating orders. To run it, see the [_`Getting Started`_](#getting-started) guide.
 
 ## API Endpoints Overview
 
-| Endpoint         | Method | Description                                |
-| ---------------- | ------ | ------------------------------------------ |
-| `/v1/orders`     | GET    | Retrieve a list of all orders              |
-| `/v1/orders/:id` | GET    | Retrieve details of a specific order by ID |
-| `/v1/orders`     | POST   | Create or update an order                  |
+| Endpoint             | Method | Description                                |
+| -------------------- | ------ | ------------------------------------------ |
+| `/api/v1/orders`     | GET    | Retrieve a list of all orders              |
+| `/api/v1/orders/:id` | GET    | Retrieve details of a specific order by ID |
+| `/api/v1/orders`     | POST   | Create or update an order                  |
 
-For detailed information on request and response formats, please refer to the Swagger documentation at `/api/docs`.
+For detailed information on request and response formats, please refer to the complete API documentation at: `/api/docs`.
 
 ## Health Check
 
@@ -23,8 +25,6 @@ To ensure the service is running and healthy, you can use the root endpoint:
 | Endpoint | Method | Description                                                     |
 | -------- | ------ | --------------------------------------------------------------- |
 | `/`      | GET    | A successful response indicates that the service is operational |
-
----
 
 ## Relevance [CRITICAL]
 
@@ -40,12 +40,12 @@ If this service is down:
 
 - **Architecture**: Inspired in a clean architecture combined with the hexagonal architecture and based on domain-driven design. Isolating domain citizens and application use-cases of any kind of external dependency.
 
-  ![](https://khalilstemmler.com/img/blog/ddd-intro/clean.jpg)
+  ![](./docs/assets/clean-architecture-diagram.drawio.png)
 
   The folder structure follows the different layers:
 
-  - [application](./src/application/) for application services (use-cases)
   - [domain](./src/domain) for domain entities and interfaces (core)
+  - [application](./src/application/) for application services (use-cases)
   - [handlers](./src/handlers) for the web API and event listeners (ingresses)
   - [infrastructure](./src/infrastructure) for infra implementations (e.g.: database)
 
@@ -73,9 +73,9 @@ If this service is down:
 - **Documentation**:
 
   - **API**: [Swagger](https://swagger.io/) with [OpenAPI Specification](https://spec.openapis.org/oas/v3.1.0)
-  - **CHANGELOG**: Check what is new or changed [here](./docs/CHANGELOG.md)
+  - [**CHANGELOG**](./docs/CHANGELOG.md): All news, improvements and fixes
 
-  Additional documentation will be place under [`docs`](./docs/)
+  All additional documentation can be found under [`docs`](./docs/).
 
 - **Testing**
 
@@ -87,9 +87,13 @@ If this service is down:
   - [**Prettier**](https://prettier.io/) (see [.prettierrc](./.prettierrc))
   - [**ESLint**](https://eslint.org/) (see [.eslintrc](./.eslintrc))
 
+## Getting Started
+
+To run the service it is quick and easy, please check the steps [here](./docs/GETTING-STARTED.md).
+
 ## For Developers
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) and [TECHDEBT.md](./TECHDEBT.md)
+See [CONTRIBUTING.md](./docs/CONTRIBUTING.md) and [TECHDEBT.md](./docs/TECHDEBT.md)
 
 ## License
 
