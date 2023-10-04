@@ -323,19 +323,128 @@ export class OrderController {
             throw new ControllerValidationException(errors);
           }
 
-          this.logger.debug('Order details endpoint called', {
+          this.logger.debug('Listing customer orders endpoint called', {
             module: this.module,
             endpoint: request.url,
           });
 
-          const order = await this.service.listCustomerOrders(customerId);
+          const orders = await this.service.listCustomerOrders(customerId);
 
-          this.logger.debug('Order details endpoint responded', {
+          this.logger.debug('Listing customer orders endpoint responded', {
             module: this.module,
             endpoint: request.url,
           });
 
-          return response.status(200).json(order);
+          return response.status(200).json(orders);
+        } catch (error) {
+          if (error instanceof ControllerValidationException) {
+            if (error.message.includes('Unauthorized')) {
+              return response.status(401).json(error.message);
+            }
+
+            return response.status(400).json(`Bad request. Error: ${error.message}`);
+          }
+
+          return response.status(500).json('Internal Server Error');
+        }
+      },
+    );
+
+    /**
+     * @openapi
+     * /orders/status/{status}:
+     *  get:
+     *    summary: Retrieve a list of orders by status
+     *    description: Get all orders by status
+     *    tags:
+     *      - v1
+     *        - Orders
+     *    parameters:
+     *      - in: header
+     *        name: x-api-key
+     *        schema:
+     *          type: string
+     *        required: true
+     *      - in: path
+     *        name: status
+     *        schema:
+     *          type: string
+     *          enum: [CANCELLED, CONFIRMED, DELIVERED, PENDING, SHIPPED]
+     *        required: true
+     *    responses:
+     *      200:
+     *        description: List of orders
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: array
+     *              items:
+     *                $ref: '#/components/schemas/Order'
+     *      400:
+     *        description: Bad request
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Invalid Status
+     *      401:
+     *        description: Unauthorized
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Unauthorized
+     *      500:
+     *        description: Internal Server Error
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Internal Server Error
+     *    security:
+     *      - ApiKeyAuth: []
+     */
+    this.router.get(
+      '/v1/orders/status/:status',
+      header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
+      param('status')
+        .custom(status => {
+          try {
+            OrderStatus.fromString(status);
+            return true;
+          } catch (error) {
+            return false;
+          }
+        })
+        .withMessage('Invalid Status'),
+      async (request: Request, response: Response) => {
+        const { status } = request.params;
+
+        try {
+          const errors = validationResult(request);
+          if (!errors.isEmpty()) {
+            this.logger.error('Controller validation error', {
+              module: this.module,
+              header: request.headers,
+              errors,
+            });
+
+            throw new ControllerValidationException(errors);
+          }
+
+          this.logger.debug('Listing orders by status endpoint called', {
+            module: this.module,
+            endpoint: request.url,
+          });
+
+          const orders = await this.service.listOrdersByStatus(new OrderStatus(status));
+
+          this.logger.debug('Listing orders by status endpoint responded', {
+            module: this.module,
+            endpoint: request.url,
+          });
+
+          return response.status(200).json(orders);
         } catch (error) {
           if (error instanceof ControllerValidationException) {
             if (error.message.includes('Unauthorized')) {
