@@ -1,4 +1,4 @@
-import { Order } from '../domain';
+import { Order, OrderStatus } from '../domain';
 import { IOrderRepository } from '../domain/interfaces';
 import { Logger } from '../logger.module';
 
@@ -23,6 +23,11 @@ export class OrderService {
   public async listOrders(): Promise<Order[]> {
     this.logger.debug('Getting all orders', { module: this.module });
     return await this.repository.getAllOrders();
+  }
+
+  public async listOrdersByStatus(status: OrderStatus): Promise<Order[]> {
+    this.logger.debug(`Getting orders with status: ${status}`, { module: this.module });
+    return await this.repository.getOrdersByStatus(status);
   }
 
   public async upsertOrder(order: Order): Promise<Order> {

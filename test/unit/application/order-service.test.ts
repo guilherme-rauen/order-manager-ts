@@ -12,6 +12,7 @@ describe('OrderService', () => {
   const repository = {
     getOrderById: jest.fn(),
     getOrdersByCustomerId: jest.fn(),
+    getOrdersByStatus: jest.fn(),
     getAllOrders: jest.fn(),
     store: jest.fn(),
   } as unknown as OrderRepository;
@@ -128,6 +129,42 @@ describe('OrderService', () => {
     it('should throw if an error occurs', async () => {
       repository.getAllOrders = jest.fn().mockRejectedValueOnce(new Error('Internal Server Error'));
       await expect(service.listOrders()).rejects.toThrow('Internal Server Error');
+    });
+  });
+
+  describe('listOrdersByStatus', () => {
+    it('should return a list of all orders with the given status', async () => {
+      repository.getOrdersByStatus = jest.fn().mockResolvedValueOnce([order]);
+
+      const status = new OrderStatus('shipped');
+      const result = await service.listOrdersByStatus(status);
+      expect(repository.getOrdersByStatus).toHaveBeenCalledWith(status);
+      expect(result).toHaveLength(1);
+      expect(result[0].customerId).toBe(order.customerId);
+      expect(result[0].orderDate).toBe(order.orderDate);
+      expect(result[0].orderId).toBe(order.orderId);
+      expect(result[0].orderItems).toBe(order.orderItems);
+      expect(result[0].status).toBe(order.status);
+      expect(result[0].totalAmount).toBe(130.25);
+    });
+
+    it('should return an empty array if no orders exist', async () => {
+      repository.getOrdersByStatus = jest.fn().mockResolvedValueOnce([]);
+
+      const status = new OrderStatus('pending');
+      const result = await service.listOrdersByStatus(status);
+      expect(repository.getOrdersByStatus).toHaveBeenCalledWith(status);
+      expect(result).toHaveLength(0);
+    });
+
+    it('should throw if an error occurs', async () => {
+      repository.getOrdersByStatus = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('Internal Server Error'));
+
+      await expect(service.listOrdersByStatus(new OrderStatus('shipped'))).rejects.toThrow(
+        'Internal Server Error',
+      );
     });
   });
 
