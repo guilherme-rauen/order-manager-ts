@@ -252,6 +252,106 @@ export class OrderController {
 
     /**
      * @openapi
+     * /orders/customer/{customerId}:
+     *  get:
+     *    summary: Retrieve a list of orders for a customer
+     *    description: Get all orders for a customer
+     *    tags:
+     *      - v1
+     *        - Orders
+     *    parameters:
+     *      - in: header
+     *        name: x-api-key
+     *        schema:
+     *          type: string
+     *        required: true
+     *      - in: path
+     *        name: customerId
+     *        schema:
+     *          type: string
+     *          format: uuid
+     *        required: true
+     *    responses:
+     *      200:
+     *        description: List of orders
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: array
+     *              items:
+     *                $ref: '#/components/schemas/Order'
+     *      400:
+     *        description: Bad request
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Invalid Customer ID
+     *      401:
+     *        description: Unauthorized
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Unauthorized
+     *      500:
+     *        description: Internal Server Error
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Internal Server Error
+     *    security:
+     *      - ApiKeyAuth: []
+     */
+    this.router.get(
+      '/v1/orders/customer/:customerId',
+      header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
+      param('customerId').isUUID().withMessage('Invalid Customer ID'),
+      async (request: Request, response: Response) => {
+        const { customerId } = request.params;
+
+        try {
+          const errors = validationResult(request);
+          if (!errors.isEmpty()) {
+            this.logger.error('Controller validation error', {
+              module: this.module,
+              header: request.headers,
+              errors,
+            });
+
+            throw new ControllerValidationException(errors);
+          }
+
+          this.logger.debug('Order details endpoint called', {
+            module: this.module,
+            endpoint: request.url,
+          });
+
+          const order = await this.service.listCustomerOrders(customerId);
+
+          this.logger.debug('Order details endpoint responded', {
+            module: this.module,
+            endpoint: request.url,
+          });
+
+          return response.status(200).json(order);
+        } catch (error) {
+          if (error instanceof ControllerValidationException) {
+            if (error.message.includes('Unauthorized')) {
+              return response.status(401).json(error.message);
+            }
+
+            return response.status(400).json(`Bad request. Error: ${error.message}`);
+          }
+
+          return response.status(500).json('Internal Server Error');
+        }
+      },
+    );
+
+    /**
+     * @openapi
      * /orders:
      *  post:
      *    summary: Create or update an order

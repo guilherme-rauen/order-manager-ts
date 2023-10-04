@@ -189,6 +189,65 @@ describe('OrderController', () => {
     });
   });
 
+  describe('GET /api/v1/orders/customer/:customerId', () => {
+    it('should return 200 (OK) on success', async () => {
+      (mongoose.model('Order').find as jest.Mock).mockResolvedValueOnce([modelOrder]);
+      const result = await request(server)
+        .get(`/api/v1/orders/customer/${modelOrder.customerId}`)
+        .set('x-api-key', envVars.API_SECRET)
+        .expect(200);
+
+      expect(result.body).toHaveLength(1);
+      expect(result.body[0].customerId).toBe(modelOrder.customerId);
+      expect(result.body[0].orderDate).toBe(date.toISOString());
+      expect(result.body[0].orderId).toBe(modelOrder.orderId);
+      expect(result.body[0].orderItems).toHaveLength(1);
+      expect(result.body[0].orderItems[0].productId).toBe(modelOrder.orderItems[0].productId);
+      expect(result.body[0].orderItems[0].quantity).toBe(modelOrder.orderItems[0].quantity);
+      expect(result.body[0].orderItems[0].unitPrice).toBe(modelOrder.orderItems[0].unitPrice);
+      expect(result.body[0].status.value).toEqual(modelOrder.status);
+      expect(result.body[0].totalAmount).toBe(price);
+    });
+
+    it('should return 400 (Bad Request) with invalid order id', async () => {
+      const response = await request(server)
+        .get('/api/v1/orders/customer/invalid-customer-id')
+        .set('x-api-key', envVars.API_SECRET)
+        .expect(400);
+
+      expect(response.body).toBe('Bad request. Error: Invalid Customer ID');
+    });
+
+    it('should return 401 (Unauthorized) with x-api-key is missing', async () => {
+      const response = await request(server)
+        .get(`/api/v1/orders/customer/${modelOrder.customerId}`)
+        .expect(401);
+      expect(response.body).toBe('Unauthorized');
+    });
+
+    it('should return 401 (Unauthorized) with x-api-key is invalid', async () => {
+      const response = await request(server)
+        .get(`/api/v1/orders/customer/${modelOrder.customerId}`)
+        .set('x-api-key', 'invalid-api-key')
+        .expect(401);
+
+      expect(response.body).toBe('Unauthorized');
+    });
+
+    it('should return 500 (Internal Server Error) on error', async () => {
+      (mongoose.model('Order').findOne as jest.Mock).mockRejectedValueOnce(() => {
+        throw new Error('Test error');
+      });
+
+      const response = await request(server)
+        .get(`/api/v1/orders/customer/${modelOrder.customerId}`)
+        .set('x-api-key', envVars.API_SECRET)
+        .expect(500);
+
+      expect(response.body).toBe('Internal Server Error');
+    });
+  });
+
   describe('POST /api/v1/orders', () => {
     it('should return 200 (OK) on success - create', async () => {
       (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(null);
