@@ -217,7 +217,7 @@ describe('OrderRepository', () => {
 
     it('should create a new order if does not exist', async () => {
       (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(null);
-      (mongoose.model('Order').create as jest.Mock).mockResolvedValueOnce(domainOrder);
+      (mongoose.model('Order').create as jest.Mock).mockResolvedValueOnce(modelOrder);
 
       const result = await repository.store(domainOrder);
       expect(mongoose.model('Order').create).toHaveBeenCalledTimes(1);
@@ -227,15 +227,18 @@ describe('OrderRepository', () => {
       expect(result.orderId).toBe(domainOrder.orderId);
       expect(result.orderItems).toBe(domainOrder.orderItems);
       expect(result.totalAmount).toBe(domainOrder.totalAmount);
-      expect(result.status.toString()).toBe(domainOrder.status);
+      expect(result.status.toString()).toEqual(domainOrder.status.toString());
     });
 
     it('should update an order if it exists', async () => {
-      const updatedOrder = { ...domainOrder, status: 'SHIPPED' };
+      const updatedModelOrder = { ...modelOrder, status: 'SHIPPED' };
+      const updatedOrder = mapper.mapToDomain(updatedModelOrder);
       (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
-      (mongoose.model('Order').findOneAndUpdate as jest.Mock).mockResolvedValueOnce(updatedOrder);
+      (mongoose.model('Order').findOneAndUpdate as jest.Mock).mockResolvedValueOnce(
+        updatedModelOrder,
+      );
 
-      const result = await repository.store(domainOrder);
+      const result = await repository.store(updatedOrder);
       expect(mongoose.model('Order').findOneAndUpdate).toHaveBeenCalledTimes(1);
 
       expect(result.customerId).toBe(updatedOrder.customerId);
@@ -243,7 +246,7 @@ describe('OrderRepository', () => {
       expect(result.orderId).toBe(updatedOrder.orderId);
       expect(result.orderItems).toBe(updatedOrder.orderItems);
       expect(result.totalAmount).toBe(updatedOrder.totalAmount);
-      expect(result.status.toString()).toBe(updatedOrder.status);
+      expect(result.status.toString()).toBe(updatedOrder.status.toString());
     });
 
     it('should throw an ObjectNotFoundException if order is not found after update', async () => {

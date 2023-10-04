@@ -38,7 +38,7 @@ describe('OrderMapper', () => {
       orderId: 'order-id',
       orderDate: date,
       orderItems: [orderItem],
-      status: OrderStatus.PENDING,
+      status: new OrderStatus('PENDING'),
     });
 
     const model = mapper.mapToModel(order);

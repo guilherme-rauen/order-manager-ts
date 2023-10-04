@@ -408,14 +408,7 @@ export class OrderController {
       '/v1/orders/status/:status',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
       param('status')
-        .custom(status => {
-          try {
-            OrderStatus.fromString(status);
-            return true;
-          } catch (error) {
-            return false;
-          }
-        })
+        .custom(status => (OrderStatus.isValidStatus(status) ? true : false))
         .withMessage('Invalid Status'),
       async (request: Request, response: Response) => {
         const { status } = request.params;
@@ -516,6 +509,7 @@ export class OrderController {
       '/v1/orders',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
       body('customerId').isUUID().withMessage('Invalid Customer ID'),
+      body('orderDate').isISO8601().withMessage('Invalid Order Date').optional(),
       body('orderId')
         .custom(orderId => (Order.validateOrderId(orderId) ? true : false))
         .withMessage('Invalid Order ID')
@@ -524,6 +518,10 @@ export class OrderController {
       body('orderItems.*.productId').isUUID().withMessage('Invalid Product ID'),
       body('orderItems.*.quantity').isInt({ min: 1 }).withMessage('Invalid Quantity'),
       body('orderItems.*.unitPrice').isFloat({ min: 0 }).withMessage('Invalid Unit Price'),
+      body('status')
+        .custom(status => (OrderStatus.isValidStatus(status) ? true : false))
+        .withMessage('Invalid Status')
+        .optional(),
       async (request: Request, response: Response) => {
         const { customerId, orderId, orderDate, orderItems, status } = request.body;
 
@@ -539,7 +537,7 @@ export class OrderController {
             throw new ControllerValidationException(errors);
           }
 
-          this.logger.debug('Create order endpoint called', {
+          this.logger.debug('Upsert order endpoint called', {
             module: this.module,
             endpoint: request.url,
           });
@@ -554,7 +552,7 @@ export class OrderController {
 
           await this.service.upsertOrder(order);
 
-          this.logger.debug('Create order endpoint responded', {
+          this.logger.debug('Upsert order endpoint responded', {
             module: this.module,
             endpoint: request.url,
           });

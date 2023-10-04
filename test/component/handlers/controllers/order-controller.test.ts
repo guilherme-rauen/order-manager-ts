@@ -370,6 +370,21 @@ describe('OrderController', () => {
       expect(response.body).toBe('Bad request. Error: Invalid Customer ID');
     });
 
+    it('should return 400 (Bad Request) with invalid order date', async () => {
+      const response = await request(server)
+        .post('/api/v1/orders')
+        .set('x-api-key', envVars.API_SECRET)
+        .send({
+          ...payload,
+          orderDate: '2023.01.01 00:00:00',
+          orderId,
+          status: 'invalid-status',
+        })
+        .expect(400);
+
+      expect(response.body).toBe('Bad request. Error: Invalid Order Date');
+    });
+
     it('should return 400 (Bad Request) with invalid order id', async () => {
       const response = await request(server)
         .post('/api/v1/orders')
@@ -400,6 +415,21 @@ describe('OrderController', () => {
         .expect(400);
 
       expect(response.body).toBe('Bad request. Error: Invalid Product ID');
+    });
+
+    it('should return 400 (Bad Request) with invalid status', async () => {
+      const response = await request(server)
+        .post('/api/v1/orders')
+        .set('x-api-key', envVars.API_SECRET)
+        .send({
+          ...payload,
+          orderDate: date.toISOString(),
+          orderId,
+          status: 'invalid-status',
+        })
+        .expect(400);
+
+      expect(response.body).toBe('Bad request. Error: Invalid Status');
     });
 
     it('should return 401 (Unauthorized) with x-api-key is missing', async () => {
