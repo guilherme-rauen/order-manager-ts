@@ -10,11 +10,12 @@ The `order-manager` microservice is a dedicated component designed for the core 
 
 ## API Endpoints Overview
 
-| Endpoint             | Method | Description                                |
-| -------------------- | ------ | ------------------------------------------ |
-| `/api/v1/orders`     | GET    | Retrieve a list of all orders              |
-| `/api/v1/orders/:id` | GET    | Retrieve details of a specific order by ID |
-| `/api/v1/orders`     | POST   | Create or update an order                  |
+| Endpoint                              | Method | Description                                |
+| ------------------------------------- | ------ | ------------------------------------------ |
+| `/api/v1/orders`                      | GET    | Retrieve a list of all orders              |
+| `/api/v1/orders/:orderId`             | GET    | Retrieve details of a specific order by ID |
+| `/api/v1/orders/customer/:customerId` | GET    | Retrieve a list of all customer's orders   |
+| `/api/v1/orders`                      | POST   | Create or update an order                  |
 
 For detailed information on request and response formats, please refer to the complete API documentation at: `/api/docs`.
 
