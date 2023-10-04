@@ -7,6 +7,7 @@ import { Logger } from '../../../src/logger.module';
 describe('OrderService', () => {
   const logger = {
     debug: jest.fn(),
+    error: jest.fn(),
   } as unknown as Logger;
 
   const repository = {
@@ -168,19 +169,82 @@ describe('OrderService', () => {
     });
   });
 
+  describe('updateOrderStatus', () => {
+    it('should update the order status', async () => {
+      const newStatus = new OrderStatus('delivered');
+      repository.getOrderById = jest.fn().mockResolvedValueOnce(order);
+      repository.store = jest.fn().mockResolvedValueOnce({
+        ...order,
+        status: newStatus,
+      });
+
+      const result = await service.updateOrderStatus('order-id', 'delivered');
+      expect(repository.getOrderById).toHaveBeenCalledWith('order-id');
+      expect(result.customerId).toBe(order.customerId);
+      expect(result.orderDate).toBe(order.orderDate);
+      expect(result.orderId).toBe(order.orderId);
+      expect(result.orderItems).toBe(order.orderItems);
+      expect(result.status).toEqual(newStatus);
+      expect(result.totalAmount).toBe(130.25);
+    });
+
+    it('should throw InvalidOrderStatusException if the transition is invalid', async () => {
+      const newStatus = 'pending';
+      repository.getOrderById = jest.fn().mockResolvedValueOnce(order);
+
+      await expect(service.updateOrderStatus('order-id', newStatus)).rejects.toThrow(
+        `Invalid status transition from ${order.status.toString()} to ${newStatus.toUpperCase()}`,
+      );
+    });
+
+    it('should throw InvalidOrderStatusException if the status is invalid', async () => {
+      repository.getOrderById = jest.fn().mockResolvedValueOnce(order);
+
+      await expect(service.updateOrderStatus('order-id', 'invalid')).rejects.toThrow(
+        'Invalid status: invalid',
+      );
+    });
+
+    it('should throw ObjectNotFoundException if order is not found', async () => {
+      repository.getOrderById = jest
+        .fn()
+        .mockRejectedValueOnce(new ObjectNotFoundException('Order', 'order-id'));
+
+      await expect(service.updateOrderStatus('order-id', 'delivered')).rejects.toThrow(
+        ObjectNotFoundException,
+      );
+    });
+
+    it('should throw if an error occurs', async () => {
+      repository.getOrderById = jest.fn().mockRejectedValueOnce(new Error('Internal Server Error'));
+
+      await expect(service.updateOrderStatus('order-id', 'delivered')).rejects.toThrow(
+        'Internal Server Error',
+      );
+    });
+  });
+
   describe('upsertOrder', () => {
     it('should upsert an order', async () => {
-      const newStatus = new OrderStatus('delivered');
-      repository.store = jest.fn().mockResolvedValueOnce({ ...order, status: newStatus });
+      const newQuanity = 2;
+      const newAmount = order.orderItems[0].unitPrice * newQuanity;
+      repository.store = jest.fn().mockResolvedValueOnce({
+        ...order,
+        orderItems: [{ ...order.orderItems[0], quantity: newQuanity }],
+        totalAmount: newAmount,
+      });
 
       const result = await service.upsertOrder(order);
       expect(repository.store).toHaveBeenCalledWith(order);
       expect(result.customerId).toBe(order.customerId);
       expect(result.orderDate).toBe(order.orderDate);
       expect(result.orderId).toBe(order.orderId);
-      expect(result.orderItems).toBe(order.orderItems);
-      expect(result.status).toBe(newStatus);
-      expect(result.totalAmount).toBe(130.25);
+      expect(result.orderItems).toHaveLength(1);
+      expect(result.orderItems[0].productId).toBe(order.orderItems[0].productId);
+      expect(result.orderItems[0].quantity).toBe(newQuanity);
+      expect(result.orderItems[0].unitPrice).toBe(order.orderItems[0].unitPrice);
+      expect(result.status).toBe(order.status);
+      expect(result.totalAmount).toBe(newAmount);
     });
 
     it('should throw if an error occurs', async () => {
