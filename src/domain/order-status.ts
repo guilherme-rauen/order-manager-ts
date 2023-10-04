@@ -21,28 +21,24 @@ export class OrderStatus {
 
   constructor(status: Status | string) {
     if (typeof status === 'string') {
-      this.value = this.toStatus(status.toUpperCase());
+      this.value = OrderStatus.fromString(status);
       return;
     }
 
     this.value = status;
   }
 
-  public getOrderStatus(): Status {
-    return this.value;
-  }
-
-  public isValidStatus(status: Status): boolean {
-    return Object.values(Status).includes(status);
-  }
-
-  public toStatus(value: string): Status {
-    const status = Status[value as keyof typeof Status];
-    if (this.isValidStatus(status)) {
+  public static fromString(value: string): Status {
+    const status = Status[value.toUpperCase() as keyof typeof Status];
+    if (OrderStatus.isValidStatus(status)) {
       return status;
     }
 
     throw new Error(`Invalid status: ${value}`);
+  }
+
+  public static isValidStatus(status: Status): boolean {
+    return Object.values(Status).includes(status);
   }
 
   public toString(): string {
