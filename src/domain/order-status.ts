@@ -14,21 +14,20 @@ export class OrderStatus {
   }
 
   public static fromString(value: string): Status {
-    const status = Status[value.toUpperCase() as keyof typeof Status];
-    if (Object.values(Status).includes(status)) {
-      return status;
+    if (OrderStatus.isValidStatus(value)) {
+      return OrderStatus.parseStatus(value);
     }
 
     throw new Error(`Invalid status: ${value}`);
   }
 
   public static isValidStatus(status: string): boolean {
-    try {
-      OrderStatus.fromString(status);
-      return true;
-    } catch (error) {
-      return false;
-    }
+    /** Double negation checks if the status exists in the Status enum and returns a boolean. */
+    return !!OrderStatus.parseStatus(status);
+  }
+
+  public static parseStatus(value: string) {
+    return Status[value.toUpperCase() as keyof typeof Status];
   }
 
   public toString(): string {
