@@ -329,32 +329,39 @@ describe('OrderController', () => {
     });
 
     it('should return 200 (OK) on success - update', async () => {
-      const updatedModelOrder = { ...modelOrder, status: 'SHIPPED' };
-      const expectedStatus = new OrderStatus('shipped');
+      const newQuantity = 2;
+      const updatePayload = {
+        ...payload,
+        orderItems: [{ ...payload.orderItems[0], quantity: newQuantity }],
+        orderDate: date.toISOString(),
+        orderId,
+        status: 'PENDING',
+      };
+      const updatedModelOrder = {
+        ...modelOrder,
+        orderItems: [{ ...modelOrder.orderItems[0], quantity: newQuantity }],
+      };
+
       (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
       (mongoose.model('Order').findOneAndUpdate as jest.Mock).mockResolvedValueOnce(
         updatedModelOrder,
       );
+
       const result = await request(server)
         .post('/api/v1/orders')
         .set('x-api-key', envVars.API_SECRET)
-        .send({
-          ...payload,
-          orderDate: date.toISOString(),
-          orderId,
-          status: 'SHIPPED',
-        })
+        .send(updatePayload)
         .expect(200);
 
-      expect(result.body.customerId).toBe(payload.customerId);
-      expect(result.body.orderDate).toBeDefined();
-      expect(result.body.orderId).toBeDefined();
+      expect(result.body.customerId).toBe(updatePayload.customerId);
+      expect(result.body.orderDate).toBe(updatePayload.orderDate);
+      expect(result.body.orderId).toBe(updatePayload.orderId);
       expect(result.body.orderItems).toHaveLength(1);
-      expect(result.body.orderItems[0].productId).toBe(payload.orderItems[0].productId);
-      expect(result.body.orderItems[0].quantity).toBe(payload.orderItems[0].quantity);
-      expect(result.body.orderItems[0].unitPrice).toBe(payload.orderItems[0].unitPrice);
-      expect(result.body.status).toEqual(expectedStatus);
-      expect(result.body.totalAmount).toBe(price);
+      expect(result.body.orderItems[0].productId).toBe(updatePayload.orderItems[0].productId);
+      expect(result.body.orderItems[0].quantity).toBe(updatePayload.orderItems[0].quantity);
+      expect(result.body.orderItems[0].unitPrice).toBe(updatePayload.orderItems[0].unitPrice);
+      expect(result.body.status).toEqual(new OrderStatus(updatePayload.status));
+      expect(result.body.totalAmount).toBe(price * newQuantity);
     });
 
     it('should return 400 (Bad Request) with invalid customer id', async () => {

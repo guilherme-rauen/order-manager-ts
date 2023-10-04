@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 
 import { OrderStatus } from '../../../../../src/domain';
-import { ObjectNotFoundException } from '../../../../../src/domain/exceptions';
+import {
+  InvalidOrderStatusException,
+  ObjectNotFoundException,
+} from '../../../../../src/domain/exceptions';
 import { IOrder } from '../../../../../src/domain/interfaces';
 import { OrderMapper } from '../../../../../src/infrastructure/db/mappers';
 import { OrderRepository } from '../../../../../src/infrastructure/db/repositories';
@@ -231,7 +234,10 @@ describe('OrderRepository', () => {
     });
 
     it('should update an order if it exists', async () => {
-      const updatedModelOrder = { ...modelOrder, status: 'SHIPPED' };
+      const updatedModelOrder = {
+        ...modelOrder,
+        orderItems: [{ ...modelOrder.orderItems[0] }, { ...modelOrder.orderItems[1], quantity: 3 }],
+      };
       const updatedOrder = mapper.mapToDomain(updatedModelOrder);
       (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
       (mongoose.model('Order').findOneAndUpdate as jest.Mock).mockResolvedValueOnce(
@@ -247,6 +253,16 @@ describe('OrderRepository', () => {
       expect(result.orderItems).toBe(updatedOrder.orderItems);
       expect(result.totalAmount).toBe(updatedOrder.totalAmount);
       expect(result.status.toString()).toBe(updatedOrder.status.toString());
+    });
+
+    it('should throw an InvalidOrderStatusException if try to update the status', async () => {
+      const updatedDomainOrder = mapper.mapToDomain({ ...modelOrder, status: 'CONFIRMED' });
+      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
+
+      await expect(repository.store(updatedDomainOrder)).rejects.toThrow(
+        InvalidOrderStatusException,
+      );
+      expect(mongoose.model('Order').findOneAndUpdate).toHaveBeenCalledTimes(0);
     });
 
     it('should throw an ObjectNotFoundException if order is not found after update', async () => {

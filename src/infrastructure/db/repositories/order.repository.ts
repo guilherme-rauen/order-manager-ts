@@ -1,7 +1,7 @@
 import mongoose, { Model } from 'mongoose';
 
 import { Order, OrderStatus } from '../../../domain';
-import { ObjectNotFoundException } from '../../../domain/exceptions';
+import { InvalidOrderStatusException, ObjectNotFoundException } from '../../../domain/exceptions';
 import { IOrder, IOrderRepository } from '../../../domain/interfaces';
 import { Logger } from '../../../logger.module';
 import { OrderMapper } from '../mappers';
@@ -231,6 +231,10 @@ export class OrderRepository implements IOrderRepository {
       const existentOrder = await this.repository.findOne({ orderId: order.orderId });
 
       if (existentOrder) {
+        if (existentOrder.status !== orderModel.status) {
+          throw new InvalidOrderStatusException('Cannot update order status directly');
+        }
+
         return await this.update(orderModel);
       } else {
         return await this.add(orderModel);

@@ -1,3 +1,5 @@
+import { InvalidOrderStatusException } from './exceptions';
+
 enum Status {
   CANCELLED = 'CANCELLED',
   CONFIRMED = 'CONFIRMED',
@@ -6,11 +8,39 @@ enum Status {
   SHIPPED = 'SHIPPED',
 }
 
+const ALLOWED_TRANSITIONS: Record<Status, Status[]> = {
+  [Status.PENDING]: [Status.CONFIRMED, Status.CANCELLED],
+  [Status.CONFIRMED]: [Status.SHIPPED, Status.CANCELLED],
+  [Status.SHIPPED]: [Status.DELIVERED],
+  [Status.CANCELLED]: [],
+  [Status.DELIVERED]: [],
+};
+
 export class OrderStatus {
-  public readonly value: Status;
+  public value: Status;
 
   constructor(status: string) {
     this.value = OrderStatus.fromString(status);
+  }
+
+  private static parseStatus(value: string) {
+    return Status[value.toUpperCase() as keyof typeof Status];
+  }
+
+  public isTransitionAllowed(newStatus: Status): boolean {
+    return ALLOWED_TRANSITIONS[this.value].includes(newStatus);
+  }
+
+  public setStatus(newStatus: string): void {
+    const status = OrderStatus.fromString(newStatus);
+
+    if (this.isTransitionAllowed(status)) {
+      this.value = status;
+    } else {
+      throw new InvalidOrderStatusException(
+        `Invalid status transition from ${this.value} to ${status}`,
+      );
+    }
   }
 
   public static fromString(value: string): Status {
@@ -18,16 +48,12 @@ export class OrderStatus {
       return OrderStatus.parseStatus(value);
     }
 
-    throw new Error(`Invalid status: ${value}`);
+    throw new InvalidOrderStatusException(`Invalid status: ${value}`);
   }
 
   public static isValidStatus(status: string): boolean {
     /** Double negation checks if the status exists in the Status enum and returns a boolean. */
     return !!OrderStatus.parseStatus(status);
-  }
-
-  public static parseStatus(value: string) {
-    return Status[value.toUpperCase() as keyof typeof Status];
   }
 
   public toString(): string {
