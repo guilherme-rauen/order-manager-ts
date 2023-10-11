@@ -88,10 +88,24 @@ export class AppModule {
     return;
   }
 
-  public stop(): void {
+  public async stop(): Promise<void> {
     /** Stop the Express Server Instance */
     if (this.server) {
-      this.server.close(() => this.logger.debug('Server stopped', { module: this.module }));
+      try {
+        await this.server.close(async () => {
+          this.logger.debug('Server stopped', { module: this.module });
+
+          /** Disconnect the MongoDB Client */
+          if (this.mongoClient) {
+            await this.mongoClient.disconnect();
+          }
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Error stopping the server';
+        this.logger.error(errorMessage, { module: this.module, error });
+        throw error;
+      }
+
       return;
     }
 
