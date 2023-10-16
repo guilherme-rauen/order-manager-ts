@@ -1,0 +1,6 @@
+export enum Event {
+  CANCELLED = 'CANCELLED',
+  CONFIRMED = 'CONFIRMED',
+  DELIVERED = 'DELIVERED',
+  SHIPPED = 'SHIPPED',
+}
