@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
 
+import { Event } from '../../../../src/domain';
 import { EventHandler } from '../../../../src/handlers/events';
 import { EventTypeMapper } from '../../../../src/handlers/events/mappers';
 import { Logger } from '../../../../src/logger.module';
@@ -50,7 +51,7 @@ describe('EventHandler', () => {
       const eventEmitterEmitSpy = jest.spyOn(eventEmitter, 'emit');
 
       eventHandler.emitEvent(paymentDto);
-      expect(eventEmitterEmitSpy).toHaveBeenCalledWith('confirmed', paymentDto);
+      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(Event.CONFIRMED, paymentDto);
       expect(loggerDebugSpy).toHaveBeenCalledWith('CONFIRMED Event Emitted', {
         module: 'EventHandler',
         event: 'CONFIRMED',
@@ -63,7 +64,7 @@ describe('EventHandler', () => {
 
       const data = { ...paymentDto, status: 'denied' };
       eventHandler.emitEvent(data);
-      expect(eventEmitterEmitSpy).toHaveBeenCalledWith('cancelled', data);
+      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(Event.CANCELLED, data);
       expect(loggerDebugSpy).toHaveBeenCalledWith('CANCELLED Event Emitted', {
         module: 'EventHandler',
         event: 'CANCELLED',
@@ -75,7 +76,7 @@ describe('EventHandler', () => {
       const eventEmitterEmitSpy = jest.spyOn(eventEmitter, 'emit');
 
       eventHandler.emitEvent(shipmentDto);
-      expect(eventEmitterEmitSpy).toHaveBeenCalledWith('shipped', shipmentDto);
+      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(Event.SHIPPED, shipmentDto);
       expect(loggerDebugSpy).toHaveBeenCalledWith('SHIPPED Event Emitted', {
         module: 'EventHandler',
         event: 'SHIPPED',
@@ -88,7 +89,7 @@ describe('EventHandler', () => {
 
       const data = { ...shipmentDto, status: 'delivered' };
       eventHandler.emitEvent(data);
-      expect(eventEmitterEmitSpy).toHaveBeenCalledWith('delivered', data);
+      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(Event.DELIVERED, data);
       expect(loggerDebugSpy).toHaveBeenCalledWith('DELIVERED Event Emitted', {
         module: 'EventHandler',
         event: 'DELIVERED',

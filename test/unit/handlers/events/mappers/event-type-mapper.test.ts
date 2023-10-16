@@ -15,7 +15,7 @@ describe('EventTypeMapper', () => {
     };
 
     const result = mapper.mapToEvent(data);
-    expect(result).toBe('confirmed');
+    expect(result).toBe('CONFIRMED');
   });
 
   it.each(['denied', 'failed'])('should map to cancelled event when payment - %p', status => {
@@ -29,7 +29,7 @@ describe('EventTypeMapper', () => {
     };
 
     const result = mapper.mapToEvent(data);
-    expect(result).toBe('cancelled');
+    expect(result).toBe('CANCELLED');
   });
 
   it('should throw error when payment status is invalid', () => {
@@ -55,7 +55,7 @@ describe('EventTypeMapper', () => {
     };
 
     const result = mapper.mapToEvent(data);
-    expect(result).toBe('shipped');
+    expect(result).toBe('SHIPPED');
   });
 
   it('should map to delivered event', () => {
@@ -68,7 +68,7 @@ describe('EventTypeMapper', () => {
     };
 
     const result = mapper.mapToEvent(data);
-    expect(result).toBe('delivered');
+    expect(result).toBe('DELIVERED');
   });
 
   it('should throw error when shipment status is invalid', () => {

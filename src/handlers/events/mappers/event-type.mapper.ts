@@ -1,3 +1,4 @@
+import { Event } from '../../../domain';
 import { PaymentWebhookDto, ShipmentWebhookDto } from '../dtos';
 
 export class EventTypeMapper {
@@ -9,11 +10,11 @@ export class EventTypeMapper {
         const { status } = data;
 
         if (status === 'approved') {
-          return 'confirmed';
+          return Event.CONFIRMED;
         }
 
         if (status === 'denied' || status === 'failed') {
-          return 'cancelled';
+          return Event.CANCELLED;
         }
 
         throw new Error(`Invalid status: ${status}`);
@@ -23,11 +24,11 @@ export class EventTypeMapper {
         const { status } = data;
 
         if (status === 'shipped') {
-          return 'shipped';
+          return Event.SHIPPED;
         }
 
         if (status === 'delivered') {
-          return 'delivered';
+          return Event.DELIVERED;
         }
 
         throw new Error(`Invalid status: ${status}`);

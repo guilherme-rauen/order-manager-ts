@@ -17,9 +17,9 @@ export class EventHandler {
     const event = this.mapper.mapToEvent(data);
     this.eventEmitter.emit(event, data);
 
-    this.logger.debug(`${event.toUpperCase()} Event Emitted`, {
+    this.logger.debug(`${event} Event Emitted`, {
       module: this.module,
-      event: event.toUpperCase(),
+      event,
       data,
     });
 
