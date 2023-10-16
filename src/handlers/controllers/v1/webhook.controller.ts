@@ -49,9 +49,10 @@ export class WebhookController {
             data: body,
           });
 
+          const endpoint = url.replace('/v1/webhook/', '');
           this.eventHandler.emitEvent({
             amount,
-            endpoint: url,
+            endpoint,
             orderId: referenceId,
             provider,
             status,
@@ -103,9 +104,10 @@ export class WebhookController {
             data: body,
           });
 
+          const endpoint = url.replace('/v1/webhook/', '');
           this.eventHandler.emitEvent({
             carrier,
-            endpoint: url,
+            endpoint,
             orderId,
             status,
             trackingCode,

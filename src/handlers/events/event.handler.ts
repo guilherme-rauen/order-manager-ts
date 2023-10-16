@@ -16,11 +16,13 @@ export class EventHandler {
   public emitEvent(data: PaymentWebhookDto | ShipmentWebhookDto): void {
     const event = this.mapper.mapToEvent(data);
     this.eventEmitter.emit(event, data);
+
     this.logger.debug(`${event.toUpperCase()} Event Emitted`, {
       module: this.module,
       event: event.toUpperCase(),
       data,
     });
+
     return;
   }
 }
