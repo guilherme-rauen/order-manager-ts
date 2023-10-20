@@ -1,8 +1,10 @@
 import EventEmitter from 'events';
 
-import { Event } from '../../../../src/domain';
+import { OrderService } from '../../../../src/application';
+import { Event, Order } from '../../../../src/domain';
 import { EventHandler } from '../../../../src/handlers/events';
 import { EventTypeMapper } from '../../../../src/handlers/events/mappers';
+import { OrderRepository } from '../../../../src/infrastructure/db/repositories';
 import { Logger } from '../../../../src/logger.module';
 
 describe('EventHandler', () => {
@@ -14,9 +16,21 @@ describe('EventHandler', () => {
     debug: jest.fn(),
     error: jest.fn(),
     info: jest.fn(),
-  };
+  } as unknown as Logger;
+
+  const repository = {
+    getOrderById: jest.fn(),
+    getOrdersByCustomerId: jest.fn(),
+    getOrdersByStatus: jest.fn(),
+    getAllOrders: jest.fn(),
+    store: jest.fn(),
+  } as unknown as OrderRepository;
+
+  const service = new OrderService(logger, repository);
 
   const loggerDebugSpy = jest.spyOn(logger, 'debug');
+  const updateOrderStatusSpy = jest.spyOn(service, 'updateOrderStatus');
+  updateOrderStatusSpy.mockResolvedValue({} as Order);
 
   const paymentDto = {
     amount: 100,
@@ -38,7 +52,7 @@ describe('EventHandler', () => {
   beforeEach(() => {
     eventEmitter = new EventEmitter();
     mapper = new EventTypeMapper();
-    eventHandler = new EventHandler(eventEmitter, logger as unknown as Logger, mapper);
+    eventHandler = new EventHandler(eventEmitter, logger, mapper, service);
   });
 
   afterEach(() => {
@@ -94,6 +108,50 @@ describe('EventHandler', () => {
         module: 'EventHandler',
         event: 'DELIVERED',
         data,
+      });
+    });
+  });
+
+  describe('handleOrderCancelled', () => {
+    it('should update the order status to cancelled and log a debug message', async () => {
+      await eventHandler.handleOrderCancelled(paymentDto.orderId);
+      expect(updateOrderStatusSpy).toHaveBeenCalledWith(paymentDto.orderId, Event.CANCELLED);
+      expect(loggerDebugSpy).toHaveBeenCalledWith('Order Cancelled', {
+        module: 'EventHandler',
+        orderId: paymentDto.orderId,
+      });
+    });
+  });
+
+  describe('handleOrderConfirmed', () => {
+    it('should update the order status to confirmed and log a debug message', async () => {
+      await eventHandler.handleOrderConfirmed(paymentDto.orderId);
+      expect(updateOrderStatusSpy).toHaveBeenCalledWith(paymentDto.orderId, Event.CONFIRMED);
+      expect(loggerDebugSpy).toHaveBeenCalledWith('Order Confirmed', {
+        module: 'EventHandler',
+        orderId: paymentDto.orderId,
+      });
+    });
+  });
+
+  describe('handleOrderDelivered', () => {
+    it('should update the order status to delivered and log a debug message', async () => {
+      await eventHandler.handleOrderDelivered(shipmentDto.orderId);
+      expect(updateOrderStatusSpy).toHaveBeenCalledWith(shipmentDto.orderId, Event.DELIVERED);
+      expect(loggerDebugSpy).toHaveBeenCalledWith('Order Delivered', {
+        module: 'EventHandler',
+        orderId: shipmentDto.orderId,
+      });
+    });
+  });
+
+  describe('handleOrderShipped', () => {
+    it('should update the order status to shipped and log a debug message', async () => {
+      await eventHandler.handleOrderShipped(shipmentDto.orderId);
+      expect(updateOrderStatusSpy).toHaveBeenCalledWith(shipmentDto.orderId, Event.SHIPPED);
+      expect(loggerDebugSpy).toHaveBeenCalledWith('Order Shipped', {
+        module: 'EventHandler',
+        orderId: shipmentDto.orderId,
       });
     });
   });

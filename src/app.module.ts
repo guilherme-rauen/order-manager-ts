@@ -66,7 +66,12 @@ export class AppModule {
 
     /** Instantiate the Event Handlers */
     this.eventEmitter = new EventEmitter();
-    this.eventHandler = new EventHandler(this.eventEmitter, this.logger, this.eventTypeMapper);
+    this.eventHandler = new EventHandler(
+      this.eventEmitter,
+      this.logger,
+      this.eventTypeMapper,
+      this.orderService,
+    );
 
     /** Instantiate the Controllers */
     this.healthCheckController = new HealthCheckController();
