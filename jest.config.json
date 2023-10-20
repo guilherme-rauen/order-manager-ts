@@ -1,5 +1,6 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
+  "modulePathIgnorePatterns": ["<rootDir>/dist"],
   "testRegex": "\\.(component-)?test\\.ts$",
   "transform": { "^.+\\.(t|j)s$": "ts-jest" },
   "coverageDirectory": "coverage",
