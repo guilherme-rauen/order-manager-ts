@@ -42,50 +42,66 @@ export class EventHandler {
   }
 
   public async handleOrderCancelled(data: PaymentWebhookDto): Promise<void> {
-    const { orderId } = data;
-    await this.orderService.updateOrderStatus(orderId, Event.CANCELLED);
+    try {
+      const { orderId } = data;
+      await this.orderService.updateOrderStatus(orderId, Event.CANCELLED);
 
-    this.logger.debug('Order Cancelled', {
-      module: this.module,
-      orderId,
-    });
+      this.logger.debug('Order Cancelled', {
+        module: this.module,
+        orderId,
+      });
 
-    return;
+      return;
+    } catch (error) {
+      return;
+    }
   }
 
   public async handleOrderConfirmed(data: PaymentWebhookDto): Promise<void> {
-    const { amount, orderId } = data;
-    await this.orderService.updateOrderStatus(orderId, Event.CONFIRMED, amount);
+    try {
+      const { amount, orderId } = data;
+      await this.orderService.updateOrderStatus(orderId, Event.CONFIRMED, amount);
 
-    this.logger.debug('Order Confirmed', {
-      module: this.module,
-      orderId,
-    });
+      this.logger.debug('Order Confirmed', {
+        module: this.module,
+        orderId,
+      });
 
-    return;
+      return;
+    } catch (error) {
+      return;
+    }
   }
 
   public async handleOrderDelivered(data: ShipmentWebhookDto): Promise<void> {
-    const { orderId } = data;
-    await this.orderService.updateOrderStatus(orderId, Event.DELIVERED);
+    try {
+      const { orderId } = data;
+      await this.orderService.updateOrderStatus(orderId, Event.DELIVERED);
 
-    this.logger.debug('Order Delivered', {
-      module: this.module,
-      orderId,
-    });
+      this.logger.debug('Order Delivered', {
+        module: this.module,
+        orderId,
+      });
 
-    return;
+      return;
+    } catch (error) {
+      return;
+    }
   }
 
   public async handleOrderShipped(data: ShipmentWebhookDto): Promise<void> {
-    const { orderId } = data;
-    await this.orderService.updateOrderStatus(orderId, Event.SHIPPED);
+    try {
+      const { orderId } = data;
+      await this.orderService.updateOrderStatus(orderId, Event.SHIPPED);
 
-    this.logger.debug('Order Shipped', {
-      module: this.module,
-      orderId,
-    });
+      this.logger.debug('Order Shipped', {
+        module: this.module,
+        orderId,
+      });
 
-    return;
+      return;
+    } catch (error) {
+      return;
+    }
   }
 }

@@ -121,6 +121,11 @@ describe('EventHandler', () => {
         orderId: paymentDto.orderId,
       });
     });
+
+    it('should return even if an error is thrown during the update', async () => {
+      updateOrderStatusSpy.mockRejectedValueOnce(new Error('Failed to update order status'));
+      await expect(eventHandler.handleOrderCancelled(paymentDto)).resolves.not.toThrow();
+    });
   });
 
   describe('handleOrderConfirmed', () => {
@@ -136,6 +141,11 @@ describe('EventHandler', () => {
         orderId: paymentDto.orderId,
       });
     });
+
+    it('should return even if an error is thrown during the update', async () => {
+      updateOrderStatusSpy.mockRejectedValueOnce(new Error('Failed to update order status'));
+      await expect(eventHandler.handleOrderConfirmed(paymentDto)).resolves.not.toThrow();
+    });
   });
 
   describe('handleOrderDelivered', () => {
@@ -147,6 +157,11 @@ describe('EventHandler', () => {
         orderId: shipmentDto.orderId,
       });
     });
+
+    it('should return even if an error is thrown during the update', async () => {
+      updateOrderStatusSpy.mockRejectedValueOnce(new Error('Failed to update order status'));
+      await expect(eventHandler.handleOrderDelivered(shipmentDto)).resolves.not.toThrow();
+    });
   });
 
   describe('handleOrderShipped', () => {
@@ -157,6 +172,11 @@ describe('EventHandler', () => {
         module: 'EventHandler',
         orderId: shipmentDto.orderId,
       });
+    });
+
+    it('should return even if an error is thrown during the update', async () => {
+      updateOrderStatusSpy.mockRejectedValueOnce(new Error('Failed to update order status'));
+      await expect(eventHandler.handleOrderShipped(shipmentDto)).resolves.not.toThrow();
     });
   });
 });
