@@ -189,30 +189,36 @@ describe('OrderService', () => {
       expect(result.totalAmount).toBe(130.25);
     });
 
-    it('should update the order status and log an amount mismatch warn', async () => {
-      const spy = jest.spyOn(logger, 'warn');
-      const newStatus = new OrderStatus('confirmed');
-      repository.getOrderById = jest
-        .fn()
-        .mockResolvedValueOnce({ ...order, status: new OrderStatus('pending') });
-      repository.store = jest.fn().mockResolvedValueOnce({
-        ...order,
-        status: newStatus,
-      });
+    it.each([
+      ['less', 130.23, 0.02],
+      ['more', 130.27, -0.02],
+    ])(
+      'should update the order status and log warn the amount mismatch to %p',
+      async (_, value, difference) => {
+        const spy = jest.spyOn(logger, 'warn');
+        const newStatus = new OrderStatus('confirmed');
+        repository.getOrderById = jest
+          .fn()
+          .mockResolvedValueOnce({ ...order, status: new OrderStatus('pending') });
+        repository.store = jest.fn().mockResolvedValueOnce({
+          ...order,
+          status: newStatus,
+        });
 
-      const result = await service.updateOrderStatus('order-id', Event.CONFIRMED, 130.23);
-      expect(repository.getOrderById).toHaveBeenCalledWith('order-id');
-      expect(result.customerId).toBe(order.customerId);
-      expect(result.orderDate).toBe(order.orderDate);
-      expect(result.orderId).toBe(order.orderId);
-      expect(result.orderItems).toBe(order.orderItems);
-      expect(result.status).toEqual(newStatus);
-      expect(result.totalAmount).toBe(130.25);
-      expect(spy).toHaveBeenCalledWith(
-        'Paid amount has a difference with the order total amount of 0.02',
-        { module: 'OrderService' },
-      );
-    });
+        const result = await service.updateOrderStatus('order-id', Event.CONFIRMED, value);
+        expect(repository.getOrderById).toHaveBeenCalledWith('order-id');
+        expect(result.customerId).toBe(order.customerId);
+        expect(result.orderDate).toBe(order.orderDate);
+        expect(result.orderId).toBe(order.orderId);
+        expect(result.orderItems).toBe(order.orderItems);
+        expect(result.status).toEqual(newStatus);
+        expect(result.totalAmount).toBe(130.25);
+        expect(spy).toHaveBeenCalledWith(
+          `Paid amount has a difference with the order total amount of ${difference}`,
+          { module: 'OrderService' },
+        );
+      },
+    );
 
     it('should throw InvalidOrderStatusException if the transition is invalid', async () => {
       const newStatus = 'PENDING';
