@@ -71,6 +71,13 @@ export class OrderService {
         });
       }
 
+      if (error instanceof AmountMismatchException) {
+        this.logger.error('Error updating order status', {
+          module: this.module,
+          originalError: error,
+        });
+      }
+
       throw error;
     }
   }
