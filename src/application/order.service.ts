@@ -1,5 +1,5 @@
-import { Order, OrderStatus } from '../domain';
-import { InvalidOrderStatusException } from '../domain/exceptions';
+import { Event, Order, OrderStatus } from '../domain';
+import { AmountMismatchException, InvalidOrderStatusException } from '../domain/exceptions';
 import { IOrderRepository } from '../domain/interfaces';
 import { Logger } from '../logger.module';
 
@@ -31,7 +31,11 @@ export class OrderService {
     return await this.repository.getOrdersByStatus(status);
   }
 
-  public async updateOrderStatus(orderId: string, status: string): Promise<Order> {
+  public async updateOrderStatus(
+    orderId: string,
+    status: Event,
+    amountPaid?: number,
+  ): Promise<Order> {
     this.logger.debug(`Updating order status for orderId: ${orderId}`, {
       module: this.module,
       status,
@@ -39,6 +43,19 @@ export class OrderService {
 
     try {
       const order = await this.repository.getOrderById(orderId);
+      if (status === Event.CONFIRMED) {
+        if (!amountPaid) {
+          throw new AmountMismatchException('Amount paid is required for CONFIRMED status');
+        }
+
+        const difference = order.totalAmount - amountPaid;
+        if (difference > parseFloat(process.env.PAYMENT_AMOUNT_MISMATCH_THRESHOLD ?? '0.10')) {
+          throw new AmountMismatchException(
+            `Amount paid is less than total amount by ${difference}`,
+          );
+        }
+      }
+
       order.status.setStatus(status);
       return await this.repository.store(order);
     } catch (error) {

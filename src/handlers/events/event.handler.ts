@@ -40,8 +40,8 @@ export class EventHandler {
     return;
   }
 
-  public async handleOrderConfirmed(orderId: string): Promise<void> {
-    await this.orderService.updateOrderStatus(orderId, Event.CONFIRMED);
+  public async handleOrderConfirmed(orderId: string, amountPaid: number): Promise<void> {
+    await this.orderService.updateOrderStatus(orderId, Event.CONFIRMED, amountPaid);
 
     this.logger.debug('Order Confirmed', {
       module: this.module,

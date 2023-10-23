@@ -125,8 +125,12 @@ describe('EventHandler', () => {
 
   describe('handleOrderConfirmed', () => {
     it('should update the order status to confirmed and log a debug message', async () => {
-      await eventHandler.handleOrderConfirmed(paymentDto.orderId);
-      expect(updateOrderStatusSpy).toHaveBeenCalledWith(paymentDto.orderId, Event.CONFIRMED);
+      await eventHandler.handleOrderConfirmed(paymentDto.orderId, paymentDto.amount);
+      expect(updateOrderStatusSpy).toHaveBeenCalledWith(
+        paymentDto.orderId,
+        Event.CONFIRMED,
+        paymentDto.amount,
+      );
       expect(loggerDebugSpy).toHaveBeenCalledWith('Order Confirmed', {
         module: 'EventHandler',
         orderId: paymentDto.orderId,
