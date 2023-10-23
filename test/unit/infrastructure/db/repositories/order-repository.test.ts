@@ -244,7 +244,7 @@ describe('OrderRepository', () => {
         updatedModelOrder,
       );
 
-      const result = await repository.store(updatedOrder);
+      const result = await repository.store(updatedOrder, true);
       expect(mongoose.model('Order').findOneAndUpdate).toHaveBeenCalledTimes(1);
 
       expect(result.customerId).toBe(updatedOrder.customerId);
@@ -259,7 +259,7 @@ describe('OrderRepository', () => {
       const updatedDomainOrder = mapper.mapToDomain({ ...modelOrder, status: 'CONFIRMED' });
       (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
 
-      await expect(repository.store(updatedDomainOrder)).rejects.toThrow(
+      await expect(repository.store(updatedDomainOrder, true)).rejects.toThrow(
         InvalidOrderStatusException,
       );
       expect(mongoose.model('Order').findOneAndUpdate).toHaveBeenCalledTimes(0);
@@ -269,7 +269,7 @@ describe('OrderRepository', () => {
       (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
       (mongoose.model('Order').findOneAndUpdate as jest.Mock).mockResolvedValueOnce(null);
 
-      await expect(repository.store(domainOrder)).rejects.toThrow(ObjectNotFoundException);
+      await expect(repository.store(domainOrder, true)).rejects.toThrow(ObjectNotFoundException);
       expect(mongoose.model('Order').findOneAndUpdate).toHaveBeenCalledTimes(1);
     });
 
@@ -277,7 +277,7 @@ describe('OrderRepository', () => {
       const error = new Error('error');
       (mongoose.model('Order').create as jest.Mock).mockRejectedValueOnce(error);
 
-      await expect(repository.store(domainOrder)).rejects.toThrow(error);
+      await expect(repository.store(domainOrder, true)).rejects.toThrow(error);
       expect(mongoose.model('Order').create).toHaveBeenCalledTimes(1);
     });
   });

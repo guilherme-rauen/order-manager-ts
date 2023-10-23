@@ -7,5 +7,5 @@ export interface IOrderRepository {
   getOrderById(orderId: string): Promise<Order>;
   getOrdersByStatus(status: OrderStatus): Promise<Order[]>;
   remove(orderId: string): Promise<void>;
-  store(order: Order): Promise<Order>;
+  store(order: Order, controllerOrigin?: boolean): Promise<Order>;
 }

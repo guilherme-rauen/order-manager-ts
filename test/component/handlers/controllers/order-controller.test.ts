@@ -439,6 +439,25 @@ describe('OrderController', () => {
       expect(response.body).toBe('Bad request. Error: Invalid Status');
     });
 
+    it('should return 400 (Bad Request) when trying to update status via http request', async () => {
+      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
+
+      const response = await request(server)
+        .post('/api/v1/orders')
+        .set('x-api-key', envVars.API_SECRET)
+        .send({
+          ...payload,
+          orderDate: date.toISOString(),
+          orderId,
+          status: 'CONFIRMED',
+        })
+        .expect(400);
+
+      expect(response.body).toBe(
+        'Bad request. Error: Cannot update order status directly via HTTP request',
+      );
+    });
+
     it('should return 401 (Unauthorized) with x-api-key is missing', async () => {
       const response = await request(server).post('/api/v1/orders').send(payload).expect(401);
       expect(response.body).toBe('Unauthorized');

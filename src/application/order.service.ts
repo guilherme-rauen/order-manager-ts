@@ -51,7 +51,12 @@ export class OrderService {
         const difference = order.totalAmount - amountPaid;
         if (difference > parseFloat(process.env.PAYMENT_AMOUNT_MISMATCH_THRESHOLD ?? '0.10')) {
           throw new AmountMismatchException(
-            `Amount paid is less than total amount by ${difference}`,
+            `Amount paid is less than total amount by ${difference.toFixed(2)}`,
+          );
+        } else if (difference !== 0) {
+          this.logger.warn(
+            `Paid amount has a difference with the order total amount of ${difference.toFixed(2)}`,
+            { module: this.module },
           );
         }
       }
@@ -60,15 +65,18 @@ export class OrderService {
       return await this.repository.store(order);
     } catch (error) {
       if (error instanceof InvalidOrderStatusException) {
-        this.logger.error('Error updating order status', { module: this.module, error });
+        this.logger.error('Error updating order status', {
+          module: this.module,
+          originalError: error,
+        });
       }
 
       throw error;
     }
   }
 
-  public async upsertOrder(order: Order): Promise<Order> {
+  public async upsertOrder(order: Order, controllerOrigin = false): Promise<Order> {
     this.logger.debug(`Upserting order with orderId: ${order.orderId}`, { module: this.module });
-    return await this.repository.store(order);
+    return await this.repository.store(order, controllerOrigin);
   }
 }

@@ -52,7 +52,7 @@ export class OrderRepository implements IOrderRepository {
       this.logger.error('Error adding order', {
         module: this.module,
         orderId: order.orderId,
-        error,
+        originalError: error,
       });
 
       throw error;
@@ -88,7 +88,7 @@ export class OrderRepository implements IOrderRepository {
       this.logger.error('Error updating order', {
         module: this.module,
         orderId: order.orderId,
-        error,
+        originalError: error,
       });
 
       throw error;
@@ -110,7 +110,7 @@ export class OrderRepository implements IOrderRepository {
       const orders = await this.repository.find();
       return orders.map(order => this.mapper.mapToDomain(order));
     } catch (error) {
-      this.logger.error('Error getting all orders', { module: this.module, error });
+      this.logger.error('Error getting all orders', { module: this.module, originalError: error });
       throw error;
     }
   }
@@ -134,7 +134,7 @@ export class OrderRepository implements IOrderRepository {
       this.logger.error('Error getting orders by customer id', {
         module: this.module,
         customerId,
-        error,
+        originalError: error,
       });
 
       throw error;
@@ -162,7 +162,7 @@ export class OrderRepository implements IOrderRepository {
 
       return this.mapper.mapToDomain(order);
     } catch (error) {
-      this.logger.error('Error getting order by id', { module: this.module, error });
+      this.logger.error('Error getting order by id', { module: this.module, originalError: error });
       throw error;
     }
   }
@@ -183,7 +183,10 @@ export class OrderRepository implements IOrderRepository {
       const orders = await this.repository.find({ status });
       return orders.map(order => this.mapper.mapToDomain(order));
     } catch (error) {
-      this.logger.error('Error getting orders by status', { module: this.module, error });
+      this.logger.error('Error getting orders by status', {
+        module: this.module,
+        originalError: error,
+      });
       throw error;
     }
   }
@@ -209,7 +212,12 @@ export class OrderRepository implements IOrderRepository {
 
       return;
     } catch (error) {
-      this.logger.error('Error deleting order', { module: this.module, orderId, error });
+      this.logger.error('Error deleting order', {
+        module: this.module,
+        orderId,
+        originalError: error,
+      });
+
       throw error;
     }
   }
@@ -225,14 +233,18 @@ export class OrderRepository implements IOrderRepository {
    * Stores an order to the database
    *
    */
-  public async store(order: Order): Promise<Order> {
+  public async store(order: Order, controllerOrigin?: boolean): Promise<Order> {
     try {
       const orderModel = this.mapper.mapToModel(order);
       const existentOrder = await this.repository.findOne({ orderId: order.orderId });
 
       if (existentOrder) {
-        if (existentOrder.status !== orderModel.status) {
-          throw new InvalidOrderStatusException('Cannot update order status directly');
+        if (controllerOrigin) {
+          if (orderModel.status !== existentOrder.status) {
+            throw new InvalidOrderStatusException(
+              'Cannot update order status directly via HTTP request',
+            );
+          }
         }
 
         return await this.update(orderModel);
@@ -240,7 +252,7 @@ export class OrderRepository implements IOrderRepository {
         return await this.add(orderModel);
       }
     } catch (error) {
-      this.logger.error('Error storing order', { module: this.module, error });
+      this.logger.error('Error storing order', { module: this.module, originalError: error });
       throw error;
     }
   }

@@ -3,7 +3,11 @@ import { body, header, param, validationResult } from 'express-validator';
 
 import { OrderService } from '../../../application';
 import { Order, OrderStatus } from '../../../domain';
-import { ControllerValidationException, MissingEnvVarException } from '../../../domain/exceptions';
+import {
+  ControllerValidationException,
+  InvalidOrderStatusException,
+  MissingEnvVarException,
+} from '../../../domain/exceptions';
 import { Logger } from '../../../logger.module';
 
 /**
@@ -550,7 +554,7 @@ export class OrderController {
             status: status ? new OrderStatus(status) : new OrderStatus('Pending'),
           });
 
-          await this.service.upsertOrder(order);
+          await this.service.upsertOrder(order, true);
 
           this.logger.debug('Upsert order endpoint responded', {
             module: this.module,
@@ -564,6 +568,10 @@ export class OrderController {
               return response.status(401).json(error.message);
             }
 
+            return response.status(400).json(`Bad request. Error: ${error.message}`);
+          }
+
+          if (error instanceof InvalidOrderStatusException) {
             return response.status(400).json(`Bad request. Error: ${error.message}`);
           }
 

@@ -8,6 +8,7 @@ describe('OrderService', () => {
   const logger = {
     debug: jest.fn(),
     error: jest.fn(),
+    warn: jest.fn(),
   } as unknown as Logger;
 
   const repository = {
@@ -188,6 +189,31 @@ describe('OrderService', () => {
       expect(result.totalAmount).toBe(130.25);
     });
 
+    it('should update the order status and log an amount mismatch warn', async () => {
+      const spy = jest.spyOn(logger, 'warn');
+      const newStatus = new OrderStatus('confirmed');
+      repository.getOrderById = jest
+        .fn()
+        .mockResolvedValueOnce({ ...order, status: new OrderStatus('pending') });
+      repository.store = jest.fn().mockResolvedValueOnce({
+        ...order,
+        status: newStatus,
+      });
+
+      const result = await service.updateOrderStatus('order-id', Event.CONFIRMED, 130.23);
+      expect(repository.getOrderById).toHaveBeenCalledWith('order-id');
+      expect(result.customerId).toBe(order.customerId);
+      expect(result.orderDate).toBe(order.orderDate);
+      expect(result.orderId).toBe(order.orderId);
+      expect(result.orderItems).toBe(order.orderItems);
+      expect(result.status).toEqual(newStatus);
+      expect(result.totalAmount).toBe(130.25);
+      expect(spy).toHaveBeenCalledWith(
+        'Paid amount has a difference with the order total amount of 0.02',
+        { module: 'OrderService' },
+      );
+    });
+
     it('should throw InvalidOrderStatusException if the transition is invalid', async () => {
       const newStatus = 'PENDING';
       repository.getOrderById = jest.fn().mockResolvedValueOnce(order);
@@ -247,31 +273,35 @@ describe('OrderService', () => {
   });
 
   describe('upsertOrder', () => {
-    it('should upsert an order', async () => {
-      const newQuanity = 2;
-      const newAmount = order.orderItems[0].unitPrice * newQuanity;
-      repository.store = jest.fn().mockResolvedValueOnce({
-        ...order,
-        orderItems: [{ ...order.orderItems[0], quantity: newQuanity }],
-        totalAmount: newAmount,
-      });
+    it.each([true, false, undefined])(
+      'should upsert an order - controller origin: %p',
+      async value => {
+        const newQuanity = 2;
+        const newAmount = order.orderItems[0].unitPrice * newQuanity;
+        const originController = value ?? false;
+        repository.store = jest.fn().mockResolvedValueOnce({
+          ...order,
+          orderItems: [{ ...order.orderItems[0], quantity: newQuanity }],
+          totalAmount: newAmount,
+        });
 
-      const result = await service.upsertOrder(order);
-      expect(repository.store).toHaveBeenCalledWith(order);
-      expect(result.customerId).toBe(order.customerId);
-      expect(result.orderDate).toBe(order.orderDate);
-      expect(result.orderId).toBe(order.orderId);
-      expect(result.orderItems).toHaveLength(1);
-      expect(result.orderItems[0].productId).toBe(order.orderItems[0].productId);
-      expect(result.orderItems[0].quantity).toBe(newQuanity);
-      expect(result.orderItems[0].unitPrice).toBe(order.orderItems[0].unitPrice);
-      expect(result.status).toBe(order.status);
-      expect(result.totalAmount).toBe(newAmount);
-    });
+        const result = await service.upsertOrder(order, value);
+        expect(repository.store).toHaveBeenCalledWith(order, originController);
+        expect(result.customerId).toBe(order.customerId);
+        expect(result.orderDate).toBe(order.orderDate);
+        expect(result.orderId).toBe(order.orderId);
+        expect(result.orderItems).toHaveLength(1);
+        expect(result.orderItems[0].productId).toBe(order.orderItems[0].productId);
+        expect(result.orderItems[0].quantity).toBe(newQuanity);
+        expect(result.orderItems[0].unitPrice).toBe(order.orderItems[0].unitPrice);
+        expect(result.status).toBe(order.status);
+        expect(result.totalAmount).toBe(newAmount);
+      },
+    );
 
     it('should throw if an error occurs', async () => {
       repository.store = jest.fn().mockRejectedValueOnce(new Error('Internal Server Error'));
-      await expect(service.upsertOrder(order)).rejects.toThrow('Internal Server Error');
+      await expect(service.upsertOrder(order, true)).rejects.toThrow('Internal Server Error');
     });
   });
 });
