@@ -14,7 +14,18 @@ export class EventHandler {
     private readonly logger: Logger,
     private readonly mapper: EventTypeMapper,
     private readonly orderService: OrderService,
-  ) {}
+  ) {
+    this.registerListeners();
+  }
+
+  private registerListeners(): void {
+    this.eventEmitter.on(Event.CANCELLED, this.handleOrderCancelled.bind(this));
+    this.eventEmitter.on(Event.CONFIRMED, this.handleOrderConfirmed.bind(this));
+    this.eventEmitter.on(Event.DELIVERED, this.handleOrderDelivered.bind(this));
+    this.eventEmitter.on(Event.SHIPPED, this.handleOrderShipped.bind(this));
+
+    return;
+  }
 
   public emitEvent(data: PaymentWebhookDto | ShipmentWebhookDto): void {
     const event = this.mapper.mapToEvent(data);
@@ -29,7 +40,8 @@ export class EventHandler {
     return;
   }
 
-  public async handleOrderCancelled(orderId: string): Promise<void> {
+  public async handleOrderCancelled(data: PaymentWebhookDto): Promise<void> {
+    const { orderId } = data;
     await this.orderService.updateOrderStatus(orderId, Event.CANCELLED);
 
     this.logger.debug('Order Cancelled', {
@@ -40,8 +52,9 @@ export class EventHandler {
     return;
   }
 
-  public async handleOrderConfirmed(orderId: string, amountPaid: number): Promise<void> {
-    await this.orderService.updateOrderStatus(orderId, Event.CONFIRMED, amountPaid);
+  public async handleOrderConfirmed(data: PaymentWebhookDto): Promise<void> {
+    const { amount, orderId } = data;
+    await this.orderService.updateOrderStatus(orderId, Event.CONFIRMED, amount);
 
     this.logger.debug('Order Confirmed', {
       module: this.module,
@@ -51,7 +64,8 @@ export class EventHandler {
     return;
   }
 
-  public async handleOrderDelivered(orderId: string): Promise<void> {
+  public async handleOrderDelivered(data: ShipmentWebhookDto): Promise<void> {
+    const { orderId } = data;
     await this.orderService.updateOrderStatus(orderId, Event.DELIVERED);
 
     this.logger.debug('Order Delivered', {
@@ -62,7 +76,8 @@ export class EventHandler {
     return;
   }
 
-  public async handleOrderShipped(orderId: string): Promise<void> {
+  public async handleOrderShipped(data: ShipmentWebhookDto): Promise<void> {
+    const { orderId } = data;
     await this.orderService.updateOrderStatus(orderId, Event.SHIPPED);
 
     this.logger.debug('Order Shipped', {

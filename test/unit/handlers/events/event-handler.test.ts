@@ -114,7 +114,7 @@ describe('EventHandler', () => {
 
   describe('handleOrderCancelled', () => {
     it('should update the order status to cancelled and log a debug message', async () => {
-      await eventHandler.handleOrderCancelled(paymentDto.orderId);
+      await eventHandler.handleOrderCancelled(paymentDto);
       expect(updateOrderStatusSpy).toHaveBeenCalledWith(paymentDto.orderId, Event.CANCELLED);
       expect(loggerDebugSpy).toHaveBeenCalledWith('Order Cancelled', {
         module: 'EventHandler',
@@ -125,7 +125,7 @@ describe('EventHandler', () => {
 
   describe('handleOrderConfirmed', () => {
     it('should update the order status to confirmed and log a debug message', async () => {
-      await eventHandler.handleOrderConfirmed(paymentDto.orderId, paymentDto.amount);
+      await eventHandler.handleOrderConfirmed(paymentDto);
       expect(updateOrderStatusSpy).toHaveBeenCalledWith(
         paymentDto.orderId,
         Event.CONFIRMED,
@@ -140,7 +140,7 @@ describe('EventHandler', () => {
 
   describe('handleOrderDelivered', () => {
     it('should update the order status to delivered and log a debug message', async () => {
-      await eventHandler.handleOrderDelivered(shipmentDto.orderId);
+      await eventHandler.handleOrderDelivered(shipmentDto);
       expect(updateOrderStatusSpy).toHaveBeenCalledWith(shipmentDto.orderId, Event.DELIVERED);
       expect(loggerDebugSpy).toHaveBeenCalledWith('Order Delivered', {
         module: 'EventHandler',
@@ -151,7 +151,7 @@ describe('EventHandler', () => {
 
   describe('handleOrderShipped', () => {
     it('should update the order status to shipped and log a debug message', async () => {
-      await eventHandler.handleOrderShipped(shipmentDto.orderId);
+      await eventHandler.handleOrderShipped(shipmentDto);
       expect(updateOrderStatusSpy).toHaveBeenCalledWith(shipmentDto.orderId, Event.SHIPPED);
       expect(loggerDebugSpy).toHaveBeenCalledWith('Order Shipped', {
         module: 'EventHandler',
