@@ -131,7 +131,7 @@ export class AppModule {
         });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Error stopping the server';
-        this.logger.error(errorMessage, { module: this.module, error });
+        this.logger.error(errorMessage, { module: this.module, originalError: error });
         throw error;
       }
 

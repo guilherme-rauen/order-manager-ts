@@ -25,7 +25,7 @@ const shutdown = async (): Promise<void> => {
 };
 
 main().catch(error => {
-  logger.error(error.message, { module: 'index', error });
+  logger.error(error.message, { module: 'index', originalError: error });
   process.exit(1);
 });
 
@@ -40,7 +40,10 @@ process.on('SIGTERM', async () => {
 });
 
 process.on('uncaughtException', error => {
-  logger.error(`Uncaught exception error caught: ${error.message}`, { module: 'index', error });
+  logger.error(`Uncaught exception error caught: ${error.message}`, {
+    module: 'index',
+    originalError: error,
+  });
 });
 
 process.on('unhandledRejection', (reason, promise) => {

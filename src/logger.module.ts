@@ -20,7 +20,16 @@ export class Logger {
       },
       name: this.servicePrefix,
       level: process.env.LOG_LEVEL || 'info',
+      serializers: {
+        originalError: e => {
+          return this.serializeError(e);
+        },
+      },
     });
+  }
+
+  private serializeError(error: unknown): string {
+    return (error as Error).stack ?? (error as Error).message;
   }
 
   public debug(message: string, metadata: LoggerMetadata) {

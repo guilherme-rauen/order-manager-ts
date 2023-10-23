@@ -16,6 +16,7 @@ export class EventHandler {
     private readonly orderService: OrderService,
   ) {
     this.registerListeners();
+    this.logger.debug('Event listners registered', { module: this.module });
   }
 
   private registerListeners(): void {
