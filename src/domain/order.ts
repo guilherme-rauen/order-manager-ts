@@ -36,7 +36,9 @@ export class Order {
   }
 
   private calculateTotalAmount(): number {
-    return this.orderItems.reduce((total, item) => total + item.quantity * item.unitPrice, 0);
+    return parseFloat(
+      this.orderItems.reduce((total, item) => total + item.quantity * item.unitPrice, 0).toFixed(2),
+    );
   }
 
   public createOrderId(): string {
