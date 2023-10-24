@@ -25,9 +25,7 @@ describe('HealthCheckController', () => {
   describe('GET /', () => {
     it('should return 200 (OK) on success', async () => {
       const result = await request(server).get('/').expect(200);
-      expect(result.body).toBe(
-        'Sample of an Order Management System using Domain-Driven Design (DDD).',
-      );
+      expect(result.body).toBe('Order Management System using Domain-Driven Design (DDD).');
     });
   });
 });
