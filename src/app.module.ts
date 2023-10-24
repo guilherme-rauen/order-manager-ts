@@ -75,7 +75,7 @@ export class AppModule {
 
     /** Instantiate the Controllers */
     this.healthCheckController = new HealthCheckController();
-    this.orderController = new OrderController(this.logger, this.orderService);
+    this.orderController = new OrderController(this.eventHandler, this.logger, this.orderService);
     this.webhookController = new WebhookController(this.eventHandler, this.logger);
 
     /** Instantiate and Start the Express Server */

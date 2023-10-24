@@ -9,6 +9,7 @@ import {
   MissingEnvVarException,
 } from '../../../domain/exceptions';
 import { Logger } from '../../../logger.module';
+import { EventHandler } from '../../events';
 
 /**
  * @openapi
@@ -61,6 +62,7 @@ export class OrderController {
   public readonly router: Router;
 
   constructor(
+    private readonly eventHandler: EventHandler,
     private readonly logger: Logger,
     private readonly service: OrderService,
   ) {
@@ -572,6 +574,112 @@ export class OrderController {
           }
 
           if (error instanceof InvalidOrderStatusException) {
+            return response.status(400).json(`Bad request. Error: ${error.message}`);
+          }
+
+          return response.status(500).json('Internal Server Error');
+        }
+      },
+    );
+
+    /**
+     * @openapi
+     * /orders/{orderId}/cancel:
+     *  post:
+     *    summary: Cancel an order
+     *    description: Cancel an order
+     *    tags:
+     *      - v1
+     *        - Orders
+     *    parameters:
+     *      - in: header
+     *        name: x-api-key
+     *        schema:
+     *          type: string
+     *        required: true
+     *      - in: path
+     *        name: orderId
+     *        schema:
+     *          type: string
+     *          example: ORD-23-0WH1B71878
+     *        required: true
+     *    responses:
+     *      200:
+     *        description: Order cancelled
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: ORD-23-0WH1B71878 successfully cancelled
+     *      400:
+     *        description: Bad request
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Invalid Order ID
+     *      401:
+     *        description: Unauthorized
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Unauthorized
+     *      500:
+     *        description: Internal Server Error
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Internal Server Error
+     *    security:
+     *      - ApiKeyAuth: []
+     */
+    this.router.post(
+      '/v1/orders/:orderId/cancel',
+      header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
+      param('orderId')
+        .custom(orderId => (Order.validateOrderId(orderId) ? true : false))
+        .withMessage('Invalid Order ID'),
+      async (request: Request, response: Response) => {
+        const { orderId } = request.params;
+
+        try {
+          const errors = validationResult(request);
+          if (!errors.isEmpty()) {
+            this.logger.error('Controller validation error', {
+              module: this.module,
+              header: request.headers,
+              errors,
+            });
+
+            throw new ControllerValidationException(errors);
+          }
+
+          this.logger.debug('Cancel order endpoint called', {
+            module: this.module,
+            endpoint: request.url,
+          });
+
+          await this.eventHandler.emitEvent({
+            date: new Date(),
+            endpoint: 'cancel',
+            orderId,
+            status: 'cancelled',
+          });
+
+          this.logger.debug('Cancel order endpoint responded', {
+            module: this.module,
+            endpoint: request.url,
+          });
+
+          return response.status(200).json(`${orderId} successfully cancelled`);
+        } catch (error) {
+          if (error instanceof ControllerValidationException) {
+            if (error.message.includes('Unauthorized')) {
+              return response.status(401).json(error.message);
+            }
+
             return response.status(400).json(`Bad request. Error: ${error.message}`);
           }
 

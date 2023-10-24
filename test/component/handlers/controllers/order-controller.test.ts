@@ -8,6 +8,7 @@ import { OrderStatus } from '../../../../src/domain';
 import { MissingEnvVarException } from '../../../../src/domain/exceptions';
 import { IOrder } from '../../../../src/domain/interfaces';
 import { OrderController } from '../../../../src/handlers/controllers/v1';
+import { EventHandler } from '../../../../src/handlers/events';
 import { OrderMapper } from '../../../../src/infrastructure/db/mappers';
 import { OrderRepository } from '../../../../src/infrastructure/db/repositories';
 import { Logger } from '../../../../src/logger.module';
@@ -26,6 +27,12 @@ describe('OrderController', () => {
     debug: jest.fn(),
     error: jest.fn(),
   } as unknown as Logger;
+
+  const eventHandler = {
+    emitEvent: jest.fn(),
+  } as unknown as EventHandler;
+
+  const emitEventSpy = jest.spyOn(eventHandler, 'emitEvent');
 
   const date = new Date();
   const orderId = 'ORD-23-0WH1B71878';
@@ -60,7 +67,7 @@ describe('OrderController', () => {
 
     const repository = new OrderRepository(mongoose, logger, new OrderMapper());
     service = new OrderService(logger, repository);
-    const controller = new OrderController(logger, service);
+    const controller = new OrderController(eventHandler, logger, service);
 
     app = express();
     app.use(express.json());
@@ -81,7 +88,9 @@ describe('OrderController', () => {
         API_SECRET: '',
       });
 
-      expect(() => new OrderController(logger, service)).toThrow(MissingEnvVarException);
+      expect(() => new OrderController(eventHandler, logger, service)).toThrow(
+        MissingEnvVarException,
+      );
     });
   });
 
@@ -482,6 +491,55 @@ describe('OrderController', () => {
         .post('/api/v1/orders')
         .set('x-api-key', envVars.API_SECRET)
         .send(payload)
+        .expect(500);
+
+      expect(response.body).toBe('Internal Server Error');
+    });
+  });
+
+  describe('POST /api/v1/orders/:orderId/cancel', () => {
+    it('should return 200 (OK) on success', async () => {
+      emitEventSpy.mockReturnValueOnce();
+
+      const response = await request(server)
+        .post(`/api/v1/orders/${orderId}/cancel`)
+        .set('x-api-key', envVars.API_SECRET)
+        .expect(200);
+
+      expect(response.body).toBe(`${orderId} successfully cancelled`);
+    });
+
+    it('should return 400 (Bad Request) with invalid order id', async () => {
+      const response = await request(server)
+        .post('/api/v1/orders/invalid-order-id/cancel')
+        .set('x-api-key', envVars.API_SECRET)
+        .expect(400);
+
+      expect(response.body).toBe('Bad request. Error: Invalid Order ID');
+    });
+
+    it('should return 401 (Unauthorized) with x-api-key is missing', async () => {
+      const response = await request(server).post(`/api/v1/orders/${orderId}/cancel`).expect(401);
+      expect(response.body).toBe('Unauthorized');
+    });
+
+    it('should return 401 (Unauthorized) with x-api-key is invalid', async () => {
+      const response = await request(server)
+        .post(`/api/v1/orders/${orderId}/cancel`)
+        .set('x-api-key', 'invalid-api-key')
+        .expect(401);
+
+      expect(response.body).toBe('Unauthorized');
+    });
+
+    it('should return 500 (Internal Server Error) on error', async () => {
+      emitEventSpy.mockImplementationOnce(() => {
+        throw new Error('Test error');
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/orders/${orderId}/cancel`)
+        .set('x-api-key', envVars.API_SECRET)
         .expect(500);
 
       expect(response.body).toBe('Internal Server Error');
