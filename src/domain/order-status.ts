@@ -23,12 +23,12 @@ export class OrderStatus {
     this.value = OrderStatus.fromString(status);
   }
 
-  private static parseStatus(value: string) {
-    return Status[value.toUpperCase() as keyof typeof Status];
+  private isTransitionAllowed(newStatus: Status): boolean {
+    return ALLOWED_TRANSITIONS[this.value].includes(newStatus);
   }
 
-  public isTransitionAllowed(newStatus: Status): boolean {
-    return ALLOWED_TRANSITIONS[this.value].includes(newStatus);
+  private static parseStatus(value: string) {
+    return Status[value.toUpperCase() as keyof typeof Status];
   }
 
   public setStatus(newStatus: string): void {

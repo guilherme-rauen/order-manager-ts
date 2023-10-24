@@ -17,18 +17,6 @@ describe('OrderStatus', () => {
     });
   });
 
-  describe('isTransitionAllowed', () => {
-    it('should return true for a valid transition', () => {
-      const orderStatus = new OrderStatus('pending');
-      expect(orderStatus.isTransitionAllowed(OrderStatus.fromString('CONFIRMED'))).toBe(true);
-    });
-
-    it('should return false for an invalid transition', () => {
-      const orderStatus = new OrderStatus('pending');
-      expect(orderStatus.isTransitionAllowed(OrderStatus.fromString('DELIVERED'))).toBe(false);
-    });
-  });
-
   describe('setStatus', () => {
     it('should set the status for a valid transition', () => {
       const orderStatus = new OrderStatus('PENDING');
