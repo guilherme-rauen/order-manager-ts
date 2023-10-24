@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 
-import { PaymentWebhookDto, ShipmentWebhookDto } from './dtos';
+import { CancelOrderDto, PaymentWebhookDto, ShipmentWebhookDto } from './dtos';
 import { EventTypeMapper } from './mappers';
 import { OrderService } from '../../application';
 import { Event } from '../../domain';
@@ -28,7 +28,7 @@ export class EventHandler {
     return;
   }
 
-  public emitEvent(data: PaymentWebhookDto | ShipmentWebhookDto): void {
+  public emitEvent(data: CancelOrderDto | PaymentWebhookDto | ShipmentWebhookDto): void {
     const event = this.mapper.mapToEvent(data);
     this.eventEmitter.emit(event, data);
 

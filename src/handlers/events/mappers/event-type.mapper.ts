@@ -1,11 +1,14 @@
 import { Event } from '../../../domain';
-import { PaymentWebhookDto, ShipmentWebhookDto } from '../dtos';
+import { CancelOrderDto, PaymentWebhookDto, ShipmentWebhookDto } from '../dtos';
 
 export class EventTypeMapper {
-  public mapToEvent(data: PaymentWebhookDto | ShipmentWebhookDto): string {
+  public mapToEvent(data: CancelOrderDto | PaymentWebhookDto | ShipmentWebhookDto): string {
     const { endpoint } = data;
 
     switch (endpoint) {
+      case 'cancel':
+        return Event.CANCELLED;
+
       case 'payment': {
         const { status } = data;
 

@@ -1,8 +1,24 @@
-import { PaymentWebhookDto, ShipmentWebhookDto } from '../../../../../src/handlers/events/dtos';
+import {
+  CancelOrderDto,
+  PaymentWebhookDto,
+  ShipmentWebhookDto,
+} from '../../../../../src/handlers/events/dtos';
 import { EventTypeMapper } from '../../../../../src/handlers/events/mappers';
 
 describe('EventTypeMapper', () => {
   const mapper = new EventTypeMapper();
+
+  it('should map to cancelled event', () => {
+    const data: CancelOrderDto = {
+      date: new Date(),
+      endpoint: 'cancel',
+      orderId: 'order-id',
+      status: 'cancelled',
+    };
+
+    const result = mapper.mapToEvent(data);
+    expect(result).toBe('CANCELLED');
+  });
 
   it('should map to confirmed event', () => {
     const data: PaymentWebhookDto = {
