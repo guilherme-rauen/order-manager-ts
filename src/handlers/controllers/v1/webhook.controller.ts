@@ -5,6 +5,49 @@ import { ControllerValidationException, MissingEnvVarException } from '../../../
 import { Logger } from '../../../logger.module';
 import { EventHandler } from '../../events';
 
+/**
+ * @openapi
+ * components:
+ *  schemas:
+ *    PaymentWebhook:
+ *      type: object
+ *      properties:
+ *        amount:
+ *          type: number
+ *        provider:
+ *          type: string
+ *        referenceId:
+ *          type: string
+ *        status:
+ *          type: string
+ *          enum: [approved, denied, failed]
+ *        transactionId:
+ *          type: string
+ *      required:
+ *        - amount
+ *        - provider
+ *        - referenceId
+ *        - status
+ *        - transactionId
+ *
+ *    ShippingWebhook:
+ *      type: object
+ *      properties:
+ *        carrier:
+ *          type: string
+ *        orderId:
+ *          type: string
+ *        status:
+ *          type: string
+ *          enum: [delivered, shipped]
+ *        trackingCode:
+ *          type: string
+ *      required:
+ *        - carrier
+ *        - orderId
+ *        - status
+ *        - trackingCode
+ */
 export class WebhookController {
   private readonly module = 'WebhookController';
 
@@ -24,6 +67,48 @@ export class WebhookController {
       throw new MissingEnvVarException('API_SECRET not defined');
     }
 
+    /**
+     * @openapi
+     * /webhook/payment:
+     *  post:
+     *    summary: Payment webhook
+     *    description: Callback webhook endpoint for payment provider
+     *    tags:
+     *      - v1
+     *        - Webhook
+     *    requestBody:
+     *      description: Payment webhook payload
+     *      required: true
+     *      content:
+     *        application/json:
+     *          schema:
+     *            $ref: '#/components/schemas/PaymentWebhook'
+     *    parameters:
+     *      - in: header
+     *        name: x-api-key
+     *        schema:
+     *          type: string
+     *        required: true
+     *    responses:
+     *      204:
+     *        description: Webhook received and event emitted
+     *      401:
+     *        description: Unauthorized
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Unauthorized
+     *      500:
+     *        description: Internal Server Error
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Internal Server Error
+     *    security:
+     *      - ApiKeyAuth: []
+     */
     this.router.post(
       '/v1/webhook/payment',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
@@ -79,6 +164,48 @@ export class WebhookController {
       },
     );
 
+    /**
+     * @openapi
+     * /webhook/shipment:
+     *  post:
+     *    summary: Shipping webhook
+     *    description: Webhook endpoint for shipping provider
+     *    tags:
+     *      - v1
+     *        - Webhook
+     *    requestBody:
+     *      description: Shipping webhook payload
+     *      required: true
+     *      content:
+     *        application/json:
+     *          schema:
+     *            $ref: '#/components/schemas/ShippingWebhook'
+     *    parameters:
+     *      - in: header
+     *        name: x-api-key
+     *        schema:
+     *          type: string
+     *        required: true
+     *    responses:
+     *      204:
+     *        description: Webhook received and event emitted
+     *      401:
+     *        description: Unauthorized
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Unauthorized
+     *      500:
+     *        description: Internal Server Error
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Internal Server Error
+     *    security:
+     *      - ApiKeyAuth: []
+     */
     this.router.post(
       '/v1/webhook/shipment',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),

@@ -6,17 +6,20 @@
 
 # Overview
 
-The `order-manager` microservice is a dedicated component designed for the core management of orders. It provides a RESTful API that facilitates operations such as creating, retrieving, and updating orders. To run it, see the [_`Getting Started`_](#getting-started) guide.
+The `order-manager` microservice is designed to handle the core aspects of order processing. This service offers a RESTful API to streamline various operations, including the creation, retrieval, and cancellation of orders, as well as the integration of status update webhooks from payment gateways and shipping providers. Additionally, it maintains up-to-date order statuses by processing incoming events. It also updates orders status through events. For instructions on how to get this microservice up and running, please refer to the [_`Getting Started`_](#getting-started) section.
 
 ## API Endpoints Overview
 
-| Endpoint                              | Method | Description                                       |
-| ------------------------------------- | ------ | ------------------------------------------------- |
-| `/api/v1/orders`                      | GET    | Retrieve a list of all orders                     |
-| `/api/v1/orders/:orderId`             | GET    | Retrieve details of a specific order by ID        |
-| `/api/v1/orders/customer/:customerId` | GET    | Retrieve a list of all customer's orders          |
-| `/api/v1/orders/status/:status`       | GET    | Retrieve a list of all orders with a given status |
-| `/api/v1/orders`                      | POST   | Create or update an order                         |
+| Endpoint                              | Method | Description                                             |
+| ------------------------------------- | ------ | ------------------------------------------------------- |
+| `/api/v1/orders`                      | GET    | Retrieve a list of all orders                           |
+| `/api/v1/orders/:orderId`             | GET    | Retrieve details of a specific order by ID              |
+| `/api/v1/orders/customer/:customerId` | GET    | Retrieve a list of all customer's orders                |
+| `/api/v1/orders/status/:status`       | GET    | Retrieve a list of all orders with a given status       |
+| `/api/v1/orders`                      | POST   | Create or update an order                               |
+| `/api/v1/orders/:orderId/cancel`      | POST   | Cancel an order                                         |
+| `/api/v1/webhook/payment`             | POST   | Emulates a callback of a payment transaction with a PSP |
+| `/api/v1/webhook/shipment`            | POST   | Emulates the status updates sent by the carrier         |
 
 For detailed information on request and response formats, please refer to the complete API documentation at: `/api/docs`.
 
@@ -48,7 +51,7 @@ If this service is down:
 
   - [domain](./src/domain) for domain entities and interfaces (core)
   - [application](./src/application/) for application services (use-cases)
-  - [handlers](./src/handlers) for the web API and event listeners (ingresses)
+  - [handlers](./src/handlers) for the web API and event listeners (controllers and event handlers)
   - [infrastructure](./src/infrastructure) for infra implementations (e.g.: database)
 
 - **Language**:
