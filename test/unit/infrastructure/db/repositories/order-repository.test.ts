@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
 
-import { OrderStatus } from '../../../../../src/domain';
 import {
   InvalidOrderStatusException,
   ObjectNotFoundException,
 } from '../../../../../src/domain/exceptions';
 import { IOrder } from '../../../../../src/domain/interfaces';
+import { OrderStatus } from '../../../../../src/domain/order';
 import { OrderMapper } from '../../../../../src/infrastructure/db/mappers';
 import { OrderRepository } from '../../../../../src/infrastructure/db/repositories';
 import { Logger } from '../../../../../src/logger.module';

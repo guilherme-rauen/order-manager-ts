@@ -1,7 +1,8 @@
 import EventEmitter from 'events';
 
 import { OrderService } from '../../../../src/application';
-import { Event, Order } from '../../../../src/domain';
+import { Event } from '../../../../src/domain';
+import { Order } from '../../../../src/domain/order';
 import { EventHandler } from '../../../../src/handlers/events';
 import { EventTypeMapper } from '../../../../src/handlers/events/mappers';
 import { OrderRepository } from '../../../../src/infrastructure/db/repositories';

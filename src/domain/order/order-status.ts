@@ -1,4 +1,4 @@
-import { InvalidOrderStatusException } from './exceptions';
+import { InvalidOrderStatusException } from '../exceptions';
 
 enum Status {
   CANCELLED = 'CANCELLED',

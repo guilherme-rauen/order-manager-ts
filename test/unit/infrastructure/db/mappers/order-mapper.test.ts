@@ -1,5 +1,5 @@
-import { Order, OrderItem, OrderStatus } from '../../../../../src/domain';
 import { IOrder } from '../../../../../src/domain/interfaces';
+import { Order, OrderItem, OrderStatus } from '../../../../../src/domain/order';
 import { OrderMapper } from '../../../../../src/infrastructure/db/mappers';
 
 describe('OrderMapper', () => {

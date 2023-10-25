@@ -1,6 +1,7 @@
-import { Event, Order, OrderStatus } from '../domain';
+import { Event } from '../domain';
 import { AmountMismatchException, InvalidOrderStatusException } from '../domain/exceptions';
 import { IOrderRepository } from '../domain/interfaces';
+import { Order, OrderStatus } from '../domain/order';
 import { Logger } from '../logger.module';
 
 export class OrderService {

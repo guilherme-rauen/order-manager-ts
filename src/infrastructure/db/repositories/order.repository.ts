@@ -1,8 +1,8 @@
 import mongoose, { Model } from 'mongoose';
 
-import { Order, OrderStatus } from '../../../domain';
 import { InvalidOrderStatusException, ObjectNotFoundException } from '../../../domain/exceptions';
 import { IOrder, IOrderRepository } from '../../../domain/interfaces';
+import { Order, OrderStatus } from '../../../domain/order';
 import { Logger } from '../../../logger.module';
 import { OrderMapper } from '../mappers';
 import { OrderSchema } from '../mongo/schemas';

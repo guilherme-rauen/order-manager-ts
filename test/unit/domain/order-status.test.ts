@@ -1,5 +1,5 @@
-import { OrderStatus } from '../../../src/domain';
 import { InvalidOrderStatusException } from '../../../src/domain/exceptions';
+import { OrderStatus } from '../../../src/domain/order';
 
 describe('OrderStatus', () => {
   const status = 'shipped';

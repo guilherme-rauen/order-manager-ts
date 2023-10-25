@@ -1,5 +1,5 @@
-import { Order, OrderStatus } from '../../../domain';
 import { IOrder } from '../../../domain/interfaces';
+import { Order, OrderStatus } from '../../../domain/order';
 
 export class OrderMapper {
   private statusToDomain(status: string): OrderStatus {

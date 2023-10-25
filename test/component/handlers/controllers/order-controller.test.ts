@@ -4,9 +4,9 @@ import mongoose from 'mongoose';
 import request from 'supertest';
 
 import { OrderService } from '../../../../src/application';
-import { OrderStatus } from '../../../../src/domain';
 import { MissingEnvVarException } from '../../../../src/domain/exceptions';
 import { IOrder } from '../../../../src/domain/interfaces';
+import { OrderStatus } from '../../../../src/domain/order';
 import { OrderController } from '../../../../src/handlers/controllers/v1';
 import { EventHandler } from '../../../../src/handlers/events';
 import { OrderMapper } from '../../../../src/infrastructure/db/mappers';

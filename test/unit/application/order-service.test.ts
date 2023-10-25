@@ -1,6 +1,7 @@
 import { OrderService } from '../../../src/application';
-import { Event, Order, OrderStatus } from '../../../src/domain';
+import { Event } from '../../../src/domain';
 import { AmountMismatchException, ObjectNotFoundException } from '../../../src/domain/exceptions';
+import { Order, OrderStatus } from '../../../src/domain/order';
 import { OrderRepository } from '../../../src/infrastructure/db/repositories';
 import { Logger } from '../../../src/logger.module';
 

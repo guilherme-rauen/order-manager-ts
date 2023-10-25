@@ -2,12 +2,12 @@ import { Request, Response, Router } from 'express';
 import { body, header, param, validationResult } from 'express-validator';
 
 import { OrderService } from '../../../application';
-import { Order, OrderStatus } from '../../../domain';
 import {
   ControllerValidationException,
   InvalidOrderStatusException,
   MissingEnvVarException,
 } from '../../../domain/exceptions';
+import { Order, OrderStatus } from '../../../domain/order';
 import { Logger } from '../../../logger.module';
 import { EventHandler } from '../../events';
 

@@ -1,5 +1,5 @@
-import { Order } from '../order';
-import { OrderStatus } from '../order-status';
+import { Order } from '../order/order';
+import { OrderStatus } from '../order/order-status';
 
 export interface IOrderRepository {
   getAllOrders(): Promise<Order[]>;
