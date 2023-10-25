@@ -1,4 +1,4 @@
-export enum Event {
+export enum EventType {
   CANCELLED = 'CANCELLED',
   CONFIRMED = 'CONFIRMED',
   DELIVERED = 'DELIVERED',

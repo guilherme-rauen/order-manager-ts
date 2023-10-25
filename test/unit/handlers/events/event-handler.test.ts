@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 
 import { OrderService } from '../../../../src/application';
-import { Event } from '../../../../src/domain';
+import { EventType } from '../../../../src/domain/event';
 import { Order } from '../../../../src/domain/order';
 import { EventHandler } from '../../../../src/handlers/events';
 import { EventTypeMapper } from '../../../../src/handlers/events/mappers';
@@ -66,7 +66,7 @@ describe('EventHandler', () => {
       const eventEmitterEmitSpy = jest.spyOn(eventEmitter, 'emit');
 
       eventHandler.emitEvent(paymentDto);
-      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(Event.CONFIRMED, paymentDto);
+      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(EventType.CONFIRMED, paymentDto);
       expect(loggerDebugSpy).toHaveBeenCalledWith('CONFIRMED Event Emitted', {
         module: 'EventHandler',
         event: 'CONFIRMED',
@@ -79,7 +79,7 @@ describe('EventHandler', () => {
 
       const data = { ...paymentDto, status: 'denied' };
       eventHandler.emitEvent(data);
-      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(Event.CANCELLED, data);
+      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(EventType.CANCELLED, data);
       expect(loggerDebugSpy).toHaveBeenCalledWith('CANCELLED Event Emitted', {
         module: 'EventHandler',
         event: 'CANCELLED',
@@ -91,7 +91,7 @@ describe('EventHandler', () => {
       const eventEmitterEmitSpy = jest.spyOn(eventEmitter, 'emit');
 
       eventHandler.emitEvent(shipmentDto);
-      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(Event.SHIPPED, shipmentDto);
+      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(EventType.SHIPPED, shipmentDto);
       expect(loggerDebugSpy).toHaveBeenCalledWith('SHIPPED Event Emitted', {
         module: 'EventHandler',
         event: 'SHIPPED',
@@ -104,7 +104,7 @@ describe('EventHandler', () => {
 
       const data = { ...shipmentDto, status: 'delivered' };
       eventHandler.emitEvent(data);
-      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(Event.DELIVERED, data);
+      expect(eventEmitterEmitSpy).toHaveBeenCalledWith(EventType.DELIVERED, data);
       expect(loggerDebugSpy).toHaveBeenCalledWith('DELIVERED Event Emitted', {
         module: 'EventHandler',
         event: 'DELIVERED',
@@ -116,7 +116,7 @@ describe('EventHandler', () => {
   describe('handleOrderCancelled', () => {
     it('should update the order status to cancelled and log a debug message', async () => {
       await eventHandler.handleOrderCancelled(paymentDto);
-      expect(updateOrderStatusSpy).toHaveBeenCalledWith(paymentDto.orderId, Event.CANCELLED);
+      expect(updateOrderStatusSpy).toHaveBeenCalledWith(paymentDto.orderId, EventType.CANCELLED);
       expect(loggerDebugSpy).toHaveBeenCalledWith('Order Cancelled', {
         module: 'EventHandler',
         orderId: paymentDto.orderId,
@@ -134,7 +134,7 @@ describe('EventHandler', () => {
       await eventHandler.handleOrderConfirmed(paymentDto);
       expect(updateOrderStatusSpy).toHaveBeenCalledWith(
         paymentDto.orderId,
-        Event.CONFIRMED,
+        EventType.CONFIRMED,
         paymentDto.amount,
       );
       expect(loggerDebugSpy).toHaveBeenCalledWith('Order Confirmed', {
@@ -152,7 +152,7 @@ describe('EventHandler', () => {
   describe('handleOrderDelivered', () => {
     it('should update the order status to delivered and log a debug message', async () => {
       await eventHandler.handleOrderDelivered(shipmentDto);
-      expect(updateOrderStatusSpy).toHaveBeenCalledWith(shipmentDto.orderId, Event.DELIVERED);
+      expect(updateOrderStatusSpy).toHaveBeenCalledWith(shipmentDto.orderId, EventType.DELIVERED);
       expect(loggerDebugSpy).toHaveBeenCalledWith('Order Delivered', {
         module: 'EventHandler',
         orderId: shipmentDto.orderId,
@@ -168,7 +168,7 @@ describe('EventHandler', () => {
   describe('handleOrderShipped', () => {
     it('should update the order status to shipped and log a debug message', async () => {
       await eventHandler.handleOrderShipped(shipmentDto);
-      expect(updateOrderStatusSpy).toHaveBeenCalledWith(shipmentDto.orderId, Event.SHIPPED);
+      expect(updateOrderStatusSpy).toHaveBeenCalledWith(shipmentDto.orderId, EventType.SHIPPED);
       expect(loggerDebugSpy).toHaveBeenCalledWith('Order Shipped', {
         module: 'EventHandler',
         orderId: shipmentDto.orderId,

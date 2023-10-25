@@ -1,5 +1,5 @@
 import { OrderService } from '../../../src/application';
-import { Event } from '../../../src/domain';
+import { EventType } from '../../../src/domain/event';
 import { AmountMismatchException, ObjectNotFoundException } from '../../../src/domain/exceptions';
 import { Order, OrderStatus } from '../../../src/domain/order';
 import { OrderRepository } from '../../../src/infrastructure/db/repositories';
@@ -180,7 +180,7 @@ describe('OrderService', () => {
         status: newStatus,
       });
 
-      const result = await service.updateOrderStatus('order-id', Event.DELIVERED);
+      const result = await service.updateOrderStatus('order-id', EventType.DELIVERED);
       expect(repository.getOrderById).toHaveBeenCalledWith('order-id');
       expect(result.customerId).toBe(order.customerId);
       expect(result.orderDate).toBe(order.orderDate);
@@ -206,7 +206,7 @@ describe('OrderService', () => {
           status: newStatus,
         });
 
-        const result = await service.updateOrderStatus('order-id', Event.CONFIRMED, value);
+        const result = await service.updateOrderStatus('order-id', EventType.CONFIRMED, value);
         expect(repository.getOrderById).toHaveBeenCalledWith('order-id');
         expect(result.customerId).toBe(order.customerId);
         expect(result.orderDate).toBe(order.orderDate);
@@ -226,7 +226,7 @@ describe('OrderService', () => {
       repository.getOrderById = jest.fn().mockResolvedValueOnce(order);
 
       await expect(
-        service.updateOrderStatus('order-id', newStatus as unknown as Event),
+        service.updateOrderStatus('order-id', newStatus as unknown as EventType),
       ).rejects.toThrow(
         `Invalid status transition from ${order.status.toString()} to ${newStatus}`,
       );
@@ -236,7 +236,7 @@ describe('OrderService', () => {
       repository.getOrderById = jest.fn().mockResolvedValueOnce(order);
 
       await expect(
-        service.updateOrderStatus('order-id', 'INVALID' as unknown as Event),
+        service.updateOrderStatus('order-id', 'INVALID' as unknown as EventType),
       ).rejects.toThrow('Invalid status: INVALID');
     });
 
@@ -245,7 +245,7 @@ describe('OrderService', () => {
         .fn()
         .mockResolvedValueOnce({ ...order, status: new OrderStatus('pending') });
 
-      await expect(service.updateOrderStatus('order-id', Event.CONFIRMED, 130)).rejects.toThrow(
+      await expect(service.updateOrderStatus('order-id', EventType.CONFIRMED, 130)).rejects.toThrow(
         AmountMismatchException,
       );
     });
@@ -255,7 +255,7 @@ describe('OrderService', () => {
         .fn()
         .mockResolvedValueOnce({ ...order, status: new OrderStatus('pending') });
 
-      await expect(service.updateOrderStatus('order-id', Event.CONFIRMED)).rejects.toThrow(
+      await expect(service.updateOrderStatus('order-id', EventType.CONFIRMED)).rejects.toThrow(
         AmountMismatchException,
       );
     });
@@ -265,7 +265,7 @@ describe('OrderService', () => {
         .fn()
         .mockRejectedValueOnce(new ObjectNotFoundException('Order', 'order-id'));
 
-      await expect(service.updateOrderStatus('order-id', Event.DELIVERED)).rejects.toThrow(
+      await expect(service.updateOrderStatus('order-id', EventType.DELIVERED)).rejects.toThrow(
         ObjectNotFoundException,
       );
     });
@@ -273,7 +273,7 @@ describe('OrderService', () => {
     it('should throw if an error occurs', async () => {
       repository.getOrderById = jest.fn().mockRejectedValueOnce(new Error('Internal Server Error'));
 
-      await expect(service.updateOrderStatus('order-id', Event.DELIVERED)).rejects.toThrow(
+      await expect(service.updateOrderStatus('order-id', EventType.DELIVERED)).rejects.toThrow(
         'Internal Server Error',
       );
     });

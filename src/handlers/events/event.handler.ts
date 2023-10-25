@@ -3,7 +3,7 @@ import EventEmitter from 'events';
 import { CancelOrderDto, PaymentWebhookDto, ShipmentWebhookDto } from './dtos';
 import { EventTypeMapper } from './mappers';
 import { OrderService } from '../../application';
-import { Event } from '../../domain';
+import { EventType } from '../../domain/event';
 import { Logger } from '../../logger.module';
 
 export class EventHandler {
@@ -20,10 +20,10 @@ export class EventHandler {
   }
 
   private registerListeners(): void {
-    this.eventEmitter.on(Event.CANCELLED, this.handleOrderCancelled.bind(this));
-    this.eventEmitter.on(Event.CONFIRMED, this.handleOrderConfirmed.bind(this));
-    this.eventEmitter.on(Event.DELIVERED, this.handleOrderDelivered.bind(this));
-    this.eventEmitter.on(Event.SHIPPED, this.handleOrderShipped.bind(this));
+    this.eventEmitter.on(EventType.CANCELLED, this.handleOrderCancelled.bind(this));
+    this.eventEmitter.on(EventType.CONFIRMED, this.handleOrderConfirmed.bind(this));
+    this.eventEmitter.on(EventType.DELIVERED, this.handleOrderDelivered.bind(this));
+    this.eventEmitter.on(EventType.SHIPPED, this.handleOrderShipped.bind(this));
 
     return;
   }
@@ -44,7 +44,7 @@ export class EventHandler {
   public async handleOrderCancelled(data: PaymentWebhookDto): Promise<void> {
     try {
       const { orderId } = data;
-      await this.orderService.updateOrderStatus(orderId, Event.CANCELLED);
+      await this.orderService.updateOrderStatus(orderId, EventType.CANCELLED);
 
       this.logger.debug('Order Cancelled', {
         module: this.module,
@@ -60,7 +60,7 @@ export class EventHandler {
   public async handleOrderConfirmed(data: PaymentWebhookDto): Promise<void> {
     try {
       const { amount, orderId } = data;
-      await this.orderService.updateOrderStatus(orderId, Event.CONFIRMED, amount);
+      await this.orderService.updateOrderStatus(orderId, EventType.CONFIRMED, amount);
 
       this.logger.debug('Order Confirmed', {
         module: this.module,
@@ -76,7 +76,7 @@ export class EventHandler {
   public async handleOrderDelivered(data: ShipmentWebhookDto): Promise<void> {
     try {
       const { orderId } = data;
-      await this.orderService.updateOrderStatus(orderId, Event.DELIVERED);
+      await this.orderService.updateOrderStatus(orderId, EventType.DELIVERED);
 
       this.logger.debug('Order Delivered', {
         module: this.module,
@@ -92,7 +92,7 @@ export class EventHandler {
   public async handleOrderShipped(data: ShipmentWebhookDto): Promise<void> {
     try {
       const { orderId } = data;
-      await this.orderService.updateOrderStatus(orderId, Event.SHIPPED);
+      await this.orderService.updateOrderStatus(orderId, EventType.SHIPPED);
 
       this.logger.debug('Order Shipped', {
         module: this.module,

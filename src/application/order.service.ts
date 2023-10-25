@@ -1,4 +1,4 @@
-import { Event } from '../domain';
+import { EventType } from '../domain/event';
 import { AmountMismatchException, InvalidOrderStatusException } from '../domain/exceptions';
 import { IOrderRepository } from '../domain/interfaces';
 import { Order, OrderStatus } from '../domain/order';
@@ -34,7 +34,7 @@ export class OrderService {
 
   public async updateOrderStatus(
     orderId: string,
-    status: Event,
+    status: EventType,
     amountPaid?: number,
   ): Promise<Order> {
     this.logger.debug(`Updating order status for orderId: ${orderId}`, {
@@ -44,7 +44,7 @@ export class OrderService {
 
     try {
       const order = await this.repository.getOrderById(orderId);
-      if (status === Event.CONFIRMED) {
+      if (status === EventType.CONFIRMED) {
         if (!amountPaid) {
           throw new AmountMismatchException('Amount paid is required for CONFIRMED status');
         }
