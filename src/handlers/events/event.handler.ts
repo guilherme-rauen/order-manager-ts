@@ -1,12 +1,19 @@
 import EventEmitter from 'events';
 
-import { CancelOrderDto, PaymentWebhookDto, ShipmentWebhookDto } from './dtos';
 import { EventTypeMapper } from './mappers';
 import { OrderService } from '../../application';
-import { EventType } from '../../domain/event';
+import {
+  EventType,
+  OrderCancelledEvent,
+  PaymentConfirmedEvent,
+  PaymentFailedEvent,
+  ShipmentDeliveredEvent,
+  ShipmentDispatchedEvent,
+} from '../../domain/event';
+import { IEventHandler } from '../../domain/interfaces';
 import { Logger } from '../../logger.module';
 
-export class EventHandler {
+export class EventHandler implements IEventHandler {
   private readonly module = 'EventHandler';
 
   constructor(
@@ -28,7 +35,14 @@ export class EventHandler {
     return;
   }
 
-  public emitEvent(data: CancelOrderDto | PaymentWebhookDto | ShipmentWebhookDto): void {
+  public emitEvent(
+    data:
+      | OrderCancelledEvent
+      | PaymentConfirmedEvent
+      | PaymentFailedEvent
+      | ShipmentDeliveredEvent
+      | ShipmentDispatchedEvent,
+  ): void {
     const event = this.mapper.mapToEvent(data);
     this.eventEmitter.emit(event, data);
 
@@ -41,7 +55,7 @@ export class EventHandler {
     return;
   }
 
-  public async handleOrderCancelled(data: PaymentWebhookDto): Promise<void> {
+  public async handleOrderCancelled(data: OrderCancelledEvent | PaymentFailedEvent): Promise<void> {
     try {
       const { orderId } = data;
       await this.orderService.updateOrderStatus(orderId, EventType.CANCELLED);
@@ -57,7 +71,7 @@ export class EventHandler {
     }
   }
 
-  public async handleOrderConfirmed(data: PaymentWebhookDto): Promise<void> {
+  public async handleOrderConfirmed(data: PaymentConfirmedEvent): Promise<void> {
     try {
       const { amount, orderId } = data;
       await this.orderService.updateOrderStatus(orderId, EventType.CONFIRMED, amount);
@@ -73,7 +87,7 @@ export class EventHandler {
     }
   }
 
-  public async handleOrderDelivered(data: ShipmentWebhookDto): Promise<void> {
+  public async handleOrderDelivered(data: ShipmentDeliveredEvent): Promise<void> {
     try {
       const { orderId } = data;
       await this.orderService.updateOrderStatus(orderId, EventType.DELIVERED);
@@ -89,7 +103,7 @@ export class EventHandler {
     }
   }
 
-  public async handleOrderShipped(data: ShipmentWebhookDto): Promise<void> {
+  public async handleOrderShipped(data: ShipmentDispatchedEvent): Promise<void> {
     try {
       const { orderId } = data;
       await this.orderService.updateOrderStatus(orderId, EventType.SHIPPED);
