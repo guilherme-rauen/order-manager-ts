@@ -1,9 +1,10 @@
 import { Request, Response, Router } from 'express';
 import { header, validationResult } from 'express-validator';
 
+import { PaymentMapper, ShipmentMapper } from './mappers';
 import { ControllerValidationException, MissingEnvVarException } from '../../../domain/exceptions';
+import { IEventHandler } from '../../../domain/interfaces';
 import { Logger } from '../../../logger.module';
-import { EventHandler } from '../../events';
 
 /**
  * @openapi
@@ -54,8 +55,10 @@ export class WebhookController {
   public readonly router: Router;
 
   constructor(
-    private readonly eventHandler: EventHandler,
+    private readonly eventHandler: IEventHandler,
     private readonly logger: Logger,
+    private readonly paymentMapper: PaymentMapper,
+    private readonly shipmentMapper: ShipmentMapper,
   ) {
     this.router = Router();
     this.initializeRoutes();
@@ -134,15 +137,15 @@ export class WebhookController {
             data: body,
           });
 
-          const endpoint = url.replace('/v1/webhook/', '');
-          this.eventHandler.emitEvent({
+          const event = this.paymentMapper.mapToEvent({
             amount,
-            endpoint,
             orderId: referenceId,
             provider,
             status,
             transactionId,
           });
+
+          this.eventHandler.emitEvent(event);
 
           return response.status(204).send();
         } catch (error) {
@@ -231,14 +234,14 @@ export class WebhookController {
             data: body,
           });
 
-          const endpoint = url.replace('/v1/webhook/', '');
-          this.eventHandler.emitEvent({
+          const event = this.shipmentMapper.mapToEvent({
             carrier,
-            endpoint,
             orderId,
             status,
             trackingCode,
           });
+
+          this.eventHandler.emitEvent(event);
 
           return response.status(204).send();
         } catch (error) {

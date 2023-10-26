@@ -2,14 +2,15 @@ import { Request, Response, Router } from 'express';
 import { body, header, param, validationResult } from 'express-validator';
 
 import { OrderService } from '../../../application';
+import { OrderCancelledEvent } from '../../../domain/event';
 import {
   ControllerValidationException,
   InvalidOrderStatusException,
   MissingEnvVarException,
 } from '../../../domain/exceptions';
+import { IEventHandler } from '../../../domain/interfaces';
 import { Order, OrderStatus } from '../../../domain/order';
 import { Logger } from '../../../logger.module';
-import { EventHandler } from '../../events';
 
 /**
  * @openapi
@@ -62,7 +63,7 @@ export class OrderController {
   public readonly router: Router;
 
   constructor(
-    private readonly eventHandler: EventHandler,
+    private readonly eventHandler: IEventHandler,
     private readonly logger: Logger,
     private readonly service: OrderService,
   ) {
@@ -661,12 +662,7 @@ export class OrderController {
             endpoint: request.url,
           });
 
-          await this.eventHandler.emitEvent({
-            date: new Date(),
-            endpoint: 'cancel',
-            orderId,
-            status: 'cancelled',
-          });
+          await this.eventHandler.emitEvent(new OrderCancelledEvent({ orderId }));
 
           this.logger.debug('Cancel order endpoint responded', {
             module: this.module,

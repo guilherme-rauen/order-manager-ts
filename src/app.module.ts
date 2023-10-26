@@ -9,6 +9,7 @@ import { OrderService } from './application';
 import { InstanceNotFoundException } from './domain/exceptions';
 import { HealthCheckController } from './handlers/controllers';
 import { OrderController, WebhookController } from './handlers/controllers/v1';
+import { PaymentMapper, ShipmentMapper } from './handlers/controllers/v1/mappers';
 import { EventHandler } from './handlers/events';
 import { EventTypeMapper } from './handlers/events/mappers';
 import { DatabaseModule } from './infrastructure/db/database.module';
@@ -40,7 +41,11 @@ export class AppModule {
 
   private orderService?: OrderService;
 
+  private paymentMapper?: PaymentMapper;
+
   private server?: Server;
+
+  private shipmentMapper?: ShipmentMapper;
 
   private webhookController?: WebhookController;
 
@@ -57,6 +62,8 @@ export class AppModule {
     /** Instantiate the Mappers */
     this.eventTypeMapper = new EventTypeMapper();
     this.orderMapper = new OrderMapper();
+    this.paymentMapper = new PaymentMapper();
+    this.shipmentMapper = new ShipmentMapper();
 
     /** Instantiate the Repositories */
     this.orderRepository = new OrderRepository(connection, this.logger, this.orderMapper);
@@ -76,7 +83,12 @@ export class AppModule {
     /** Instantiate the Controllers */
     this.healthCheckController = new HealthCheckController();
     this.orderController = new OrderController(this.eventHandler, this.logger, this.orderService);
-    this.webhookController = new WebhookController(this.eventHandler, this.logger);
+    this.webhookController = new WebhookController(
+      this.eventHandler,
+      this.logger,
+      this.paymentMapper,
+      this.shipmentMapper,
+    );
 
     /** Instantiate and Start the Express Server */
     const port = parseInt(process.env.PORT ?? '3000', 10);

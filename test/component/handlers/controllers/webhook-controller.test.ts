@@ -4,6 +4,7 @@ import request from 'supertest';
 
 import { MissingEnvVarException } from '../../../../src/domain/exceptions';
 import { WebhookController } from '../../../../src/handlers/controllers/v1';
+import { PaymentMapper, ShipmentMapper } from '../../../../src/handlers/controllers/v1/mappers';
 import { EventHandler } from '../../../../src/handlers/events';
 import { Logger } from '../../../../src/logger.module';
 
@@ -13,6 +14,9 @@ describe('WebhookController', () => {
 
   const envVars = { API_SECRET: 'test-secret-api' };
   process.env = Object.assign(process.env, envVars);
+
+  const paymentMapper = new PaymentMapper();
+  const shipmentMapper = new ShipmentMapper();
 
   const logger = {
     debug: jest.fn(),
@@ -41,7 +45,7 @@ describe('WebhookController', () => {
   };
 
   beforeEach(() => {
-    const controller = new WebhookController(eventHandler, logger);
+    const controller = new WebhookController(eventHandler, logger, paymentMapper, shipmentMapper);
 
     app = express();
     app.use(express.json());
@@ -62,7 +66,9 @@ describe('WebhookController', () => {
         API_SECRET: '',
       });
 
-      expect(() => new WebhookController(eventHandler, logger)).toThrow(MissingEnvVarException);
+      expect(
+        () => new WebhookController(eventHandler, logger, paymentMapper, shipmentMapper),
+      ).toThrow(MissingEnvVarException);
     });
   });
 
