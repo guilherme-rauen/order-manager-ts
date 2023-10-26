@@ -1,3 +1,21 @@
-import { ShipmentDeliveredEvent } from './shipment-delivered.event';
+export class ShipmentDispatchedEvent {
+  public readonly carrier: string;
 
-export class ShipmentDispatchedEvent extends ShipmentDeliveredEvent {}
+  public readonly orderId: string;
+
+  public readonly trackingCode: string;
+
+  constructor({
+    carrier,
+    orderId,
+    trackingCode,
+  }: {
+    carrier: string;
+    orderId: string;
+    trackingCode: string;
+  }) {
+    this.carrier = carrier;
+    this.orderId = orderId;
+    this.trackingCode = trackingCode;
+  }
+}
