@@ -1,113 +1,82 @@
 import {
-  CancelOrderDto,
-  PaymentWebhookDto,
-  ShipmentWebhookDto,
-} from '../../../../../src/handlers/events/dtos';
+  OrderCancelledEvent,
+  PaymentConfirmedEvent,
+  PaymentFailedEvent,
+  ShipmentDeliveredEvent,
+  ShipmentDispatchedEvent,
+} from '../../../../../src/domain/event';
+import { Order, OrderStatus } from '../../../../../src/domain/order';
 import { EventTypeMapper } from '../../../../../src/handlers/events/mappers';
 
 describe('EventTypeMapper', () => {
   const mapper = new EventTypeMapper();
 
-  it('should map to cancelled event', () => {
-    const data: CancelOrderDto = {
-      date: new Date(),
-      endpoint: 'cancel',
+  it('should map to cancelled event when data is instanceof OrderCancelledEvent', () => {
+    const data = new OrderCancelledEvent({
       orderId: 'order-id',
-      status: 'cancelled',
-    };
+    });
 
     const result = mapper.mapToEvent(data);
     expect(result).toBe('CANCELLED');
   });
 
-  it('should map to confirmed event', () => {
-    const data: PaymentWebhookDto = {
+  it('should map to confirmed event when data is instanceof PaymentConfirmedEvent', () => {
+    const data = new PaymentConfirmedEvent({
       amount: 100,
-      endpoint: 'payment',
       orderId: 'order-id',
       provider: 'provider',
-      status: 'approved',
       transactionId: 'transaction-id',
-    };
+    });
 
     const result = mapper.mapToEvent(data);
     expect(result).toBe('CONFIRMED');
   });
 
-  it.each(['declined', 'failed'])('should map to cancelled event when payment - %p', status => {
-    const data: PaymentWebhookDto = {
+  it('should map to cancelled event when data is instanceof PaymentFailedEvent', () => {
+    const data = new PaymentFailedEvent({
       amount: 100,
-      endpoint: 'payment',
       orderId: 'order-id',
       provider: 'provider',
-      status,
       transactionId: 'transaction-id',
-    };
+    });
 
     const result = mapper.mapToEvent(data);
     expect(result).toBe('CANCELLED');
   });
 
-  it('should throw error when payment status is invalid', () => {
-    const data: PaymentWebhookDto = {
-      amount: 100,
-      endpoint: 'payment',
-      orderId: 'order-id',
-      provider: 'provider',
-      status: 'invalid-status',
-      transactionId: 'transaction-id',
-    };
-
-    expect(() => mapper.mapToEvent(data)).toThrow('Invalid status: invalid-status');
-  });
-
-  it('should map to shipped event', () => {
-    const data: ShipmentWebhookDto = {
+  it('should map to shipped event when data is instanceof ShipmentDispatchedEvent', () => {
+    const data = new ShipmentDispatchedEvent({
       carrier: 'carrier',
-      endpoint: 'shipment',
       orderId: 'order-id',
-      status: 'shipped',
       trackingCode: 'tracking-code',
-    };
+    });
 
     const result = mapper.mapToEvent(data);
     expect(result).toBe('SHIPPED');
   });
 
-  it('should map to delivered event', () => {
-    const data: ShipmentWebhookDto = {
+  it('should map to delivered event when data is instanceof ShipmentDeliveredEvent', () => {
+    const data = new ShipmentDeliveredEvent({
       carrier: 'carrier',
-      endpoint: 'shipment',
       orderId: 'order-id',
-      status: 'delivered',
       trackingCode: 'tracking-code',
-    };
+    });
 
     const result = mapper.mapToEvent(data);
     expect(result).toBe('DELIVERED');
   });
 
-  it('should throw error when shipment status is invalid', () => {
-    const data: ShipmentWebhookDto = {
-      carrier: 'carrier',
-      endpoint: 'shipment',
+  it('should throw error when the event type is an invalid one', () => {
+    const data = new Order({
+      customerId: 'customer-id',
+      orderDate: new Date(),
+      orderItems: [],
+      status: new OrderStatus('pending'),
       orderId: 'order-id',
-      status: 'invalid-status',
-      trackingCode: 'tracking-code',
-    };
+    });
 
-    expect(() => mapper.mapToEvent(data)).toThrow('Invalid status: invalid-status');
-  });
-
-  it('should throw error when endpoint is invalid', () => {
-    const data: ShipmentWebhookDto = {
-      carrier: 'carrier',
-      endpoint: 'invalid-endpoint',
-      orderId: 'order-id',
-      status: 'shipped',
-      trackingCode: 'tracking-code',
-    };
-
-    expect(() => mapper.mapToEvent(data)).toThrow('Invalid endpoint: invalid-endpoint');
+    expect(() => mapper.mapToEvent(data)).toThrow(
+      `Event type not found for: ${data.constructor.name}`,
+    );
   });
 });

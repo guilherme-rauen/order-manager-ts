@@ -1,44 +1,37 @@
-import { EventType } from '../../../domain/event';
-import { CancelOrderDto, PaymentWebhookDto, ShipmentWebhookDto } from '../dtos';
+import {
+  EventType,
+  OrderCancelledEvent,
+  PaymentConfirmedEvent,
+  PaymentFailedEvent,
+  ShipmentDeliveredEvent,
+  ShipmentDispatchedEvent,
+} from '../../../domain/event';
 
 export class EventTypeMapper {
-  public mapToEvent(data: CancelOrderDto | PaymentWebhookDto | ShipmentWebhookDto): string {
-    const { endpoint } = data;
+  public mapToEvent(
+    data:
+      | OrderCancelledEvent
+      | PaymentConfirmedEvent
+      | PaymentFailedEvent
+      | ShipmentDeliveredEvent
+      | ShipmentDispatchedEvent,
+  ): string {
+    switch (true) {
+      case data instanceof PaymentConfirmedEvent:
+        return EventType.CONFIRMED;
 
-    switch (endpoint) {
-      case 'cancel':
+      case data instanceof OrderCancelledEvent:
+      case data instanceof PaymentFailedEvent:
         return EventType.CANCELLED;
 
-      case 'payment': {
-        const { status } = data;
+      case data instanceof ShipmentDeliveredEvent:
+        return EventType.DELIVERED;
 
-        if (status === 'approved') {
-          return EventType.CONFIRMED;
-        }
-
-        if (status === 'declined' || status === 'failed') {
-          return EventType.CANCELLED;
-        }
-
-        throw new Error(`Invalid status: ${status}`);
-      }
-
-      case 'shipment': {
-        const { status } = data;
-
-        if (status === 'shipped') {
-          return EventType.SHIPPED;
-        }
-
-        if (status === 'delivered') {
-          return EventType.DELIVERED;
-        }
-
-        throw new Error(`Invalid status: ${status}`);
-      }
+      case data instanceof ShipmentDispatchedEvent:
+        return EventType.SHIPPED;
 
       default:
-        throw new Error(`Invalid endpoint: ${endpoint}`);
+        throw new Error(`Event type not found for: ${data.constructor.name}`);
     }
   }
 }
