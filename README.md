@@ -18,7 +18,7 @@ The `order-manager` microservice is designed to handle the core aspects of order
 | `/api/v1/orders/status/:status`       | GET    | Retrieve a list of all orders with a given status |
 | `/api/v1/orders`                      | POST   | Create or update an order                         |
 | `/api/v1/orders/:orderId/cancel`      | POST   | Cancel an order                                   |
-| `/api/v1/webhook/payment`             | POST   | Emulates PSPs callbacks of a payment transactions |
+| `/api/v1/webhook/payment`             | POST   | Emulates PSPs callbacks of payment transactions   |
 | `/api/v1/webhook/shipment`            | POST   | Emulates the status updates sent by the carrier   |
 
 For detailed information on request and response formats, please refer to the complete API documentation at: `/api/docs`.
