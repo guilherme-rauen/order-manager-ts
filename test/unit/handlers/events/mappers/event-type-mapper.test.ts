@@ -34,7 +34,7 @@ describe('EventTypeMapper', () => {
     expect(result).toBe('CONFIRMED');
   });
 
-  it.each(['denied', 'failed'])('should map to cancelled event when payment - %p', status => {
+  it.each(['declined', 'failed'])('should map to cancelled event when payment - %p', status => {
     const data: PaymentWebhookDto = {
       amount: 100,
       endpoint: 'payment',

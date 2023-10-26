@@ -77,7 +77,7 @@ describe('EventHandler', () => {
     it('should emit an order cancelled event and log a debug message', () => {
       const eventEmitterEmitSpy = jest.spyOn(eventEmitter, 'emit');
 
-      const data = { ...paymentDto, status: 'denied' };
+      const data = { ...paymentDto, status: 'declined' };
       eventHandler.emitEvent(data);
       expect(eventEmitterEmitSpy).toHaveBeenCalledWith(EventType.CANCELLED, data);
       expect(loggerDebugSpy).toHaveBeenCalledWith('CANCELLED Event Emitted', {

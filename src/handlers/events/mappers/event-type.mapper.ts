@@ -16,7 +16,7 @@ export class EventTypeMapper {
           return EventType.CONFIRMED;
         }
 
-        if (status === 'denied' || status === 'failed') {
+        if (status === 'declined' || status === 'failed') {
           return EventType.CANCELLED;
         }
 

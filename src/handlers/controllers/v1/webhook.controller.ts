@@ -20,7 +20,7 @@ import { EventHandler } from '../../events';
  *          type: string
  *        status:
  *          type: string
- *          enum: [approved, denied, failed]
+ *          enum: [approved, declined, failed]
  *        transactionId:
  *          type: string
  *      required:
