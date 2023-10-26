@@ -16,4 +16,4 @@ FROM base
 
 COPY --from=build /app /app
 
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "dist/src/index.js"]
