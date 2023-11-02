@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-import { MongoClient } from '../../../../../src/infrastructure/db/mongo/mongo-client';
+import { MongoClient } from '../../../../../src/infrastructure/db/mongo';
 import { Logger } from '../../../../../src/logger.module';
 
 jest.mock('mongoose');

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-import { MongoClient } from './mongo/mongo-client';
+import { MongoClient } from './mongo';
 
 export class DatabaseModule {
   constructor(private readonly client: MongoClient) {}

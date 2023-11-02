@@ -14,7 +14,7 @@ import { EventHandler } from './handlers/events';
 import { EventTypeMapper } from './handlers/events/mappers';
 import { DatabaseModule } from './infrastructure/db/database.module';
 import { OrderMapper } from './infrastructure/db/mappers';
-import { MongoClient } from './infrastructure/db/mongo/mongo-client';
+import { MongoClient } from './infrastructure/db/mongo';
 import { OrderRepository } from './infrastructure/db/repositories';
 
 export class AppModule {

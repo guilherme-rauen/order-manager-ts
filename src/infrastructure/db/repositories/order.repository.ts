@@ -4,7 +4,7 @@ import { InvalidOrderStatusException, ObjectNotFoundException } from '../../../d
 import { ILogger, IOrder, IOrderRepository } from '../../../domain/interfaces';
 import { Order, OrderStatus } from '../../../domain/order';
 import { OrderMapper } from '../mappers';
-import { OrderSchema } from '../mongo/schemas';
+import { OrderSchema } from '../mongo';
 
 export class OrderRepository implements IOrderRepository {
   private readonly model = 'Order';
