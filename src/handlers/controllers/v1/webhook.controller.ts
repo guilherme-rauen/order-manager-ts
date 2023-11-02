@@ -3,8 +3,7 @@ import { header, validationResult } from 'express-validator';
 
 import { PaymentMapper, ShipmentMapper } from './mappers';
 import { ControllerValidationException, MissingEnvVarException } from '../../../domain/exceptions';
-import { IEventHandler } from '../../../domain/interfaces';
-import { Logger } from '../../../logger.module';
+import { IEventHandler, ILogger } from '../../../domain/interfaces';
 
 /**
  * @openapi
@@ -56,7 +55,7 @@ export class WebhookController {
 
   constructor(
     private readonly eventHandler: IEventHandler,
-    private readonly logger: Logger,
+    private readonly logger: ILogger,
     private readonly paymentMapper: PaymentMapper,
     private readonly shipmentMapper: ShipmentMapper,
   ) {

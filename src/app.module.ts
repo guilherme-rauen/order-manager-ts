@@ -6,7 +6,7 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
 import { OrderService } from './application';
-import { InstanceNotFoundException } from './domain/exceptions';
+import { ILogger } from './domain/interfaces';
 import { HealthCheckController } from './handlers/controllers';
 import { OrderController, WebhookController } from './handlers/controllers/v1';
 import { PaymentMapper, ShipmentMapper } from './handlers/controllers/v1/mappers';
@@ -16,7 +16,6 @@ import { DatabaseModule } from './infrastructure/db/database.module';
 import { OrderMapper } from './infrastructure/db/mappers';
 import { MongoClient } from './infrastructure/db/mongo/mongo-client';
 import { OrderRepository } from './infrastructure/db/repositories';
-import { Logger } from './logger.module';
 
 export class AppModule {
   private readonly module = 'AppModule';
@@ -49,7 +48,7 @@ export class AppModule {
 
   private webhookController?: WebhookController;
 
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly logger: ILogger) {}
 
   public async start(): Promise<void> {
     /** Instantiate the MongoDB Client */
@@ -150,6 +149,6 @@ export class AppModule {
       return;
     }
 
-    throw new InstanceNotFoundException('Server not started');
+    throw new Error('Server not started');
   }
 }

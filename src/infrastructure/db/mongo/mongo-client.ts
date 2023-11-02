@@ -1,14 +1,14 @@
 import mongoose from 'mongoose';
 
-import { InstanceNotFoundException, MissingEnvVarException } from '../../../domain/exceptions';
-import { Logger } from '../../../logger.module';
+import { MissingEnvVarException } from '../../../domain/exceptions';
+import { ILogger } from '../../../domain/interfaces';
 
 export class MongoClient {
   private readonly module = 'MongoClient';
 
   private connection?: typeof mongoose;
 
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly logger: ILogger) {}
 
   public async connect(): Promise<typeof mongoose> {
     if (this.connection) {
@@ -42,6 +42,7 @@ export class MongoClient {
       return;
     }
 
-    throw new InstanceNotFoundException('Database connection not found');
+    this.logger.error('Database connection not found', { module: this.module });
+    return;
   }
 }

@@ -1,9 +1,8 @@
 import mongoose, { Model } from 'mongoose';
 
 import { InvalidOrderStatusException, ObjectNotFoundException } from '../../../domain/exceptions';
-import { IOrder, IOrderRepository } from '../../../domain/interfaces';
+import { ILogger, IOrder, IOrderRepository } from '../../../domain/interfaces';
 import { Order, OrderStatus } from '../../../domain/order';
-import { Logger } from '../../../logger.module';
 import { OrderMapper } from '../mappers';
 import { OrderSchema } from '../mongo/schemas';
 
@@ -27,7 +26,7 @@ export class OrderRepository implements IOrderRepository {
    */
   constructor(
     private readonly connection: typeof mongoose,
-    private readonly logger: Logger,
+    private readonly logger: ILogger,
     private readonly mapper: OrderMapper,
   ) {
     this.repository = this.connection.model(this.model, OrderSchema);
@@ -73,11 +72,10 @@ export class OrderRepository implements IOrderRepository {
    */
   private async update(order: IOrder): Promise<Order> {
     try {
-      const updatedOrder = await this.repository.findOneAndUpdate(
-        { orderId: order.orderId },
-        order,
-        { new: true },
-      );
+      const { orderId } = order;
+      const updatedOrder = await this.repository.findOneAndUpdate({ orderId }, order, {
+        new: true,
+      });
 
       if (!updatedOrder) {
         throw new ObjectNotFoundException(this.model, order.orderId);
@@ -187,6 +185,7 @@ export class OrderRepository implements IOrderRepository {
         module: this.module,
         originalError: error,
       });
+
       throw error;
     }
   }
@@ -235,8 +234,9 @@ export class OrderRepository implements IOrderRepository {
    */
   public async store(order: Order, controllerOrigin?: boolean): Promise<Order> {
     try {
+      const { orderId } = order;
       const orderModel = this.mapper.mapToModel(order);
-      const existentOrder = await this.repository.findOne({ orderId: order.orderId });
+      const existentOrder = await this.repository.findOne({ orderId });
 
       if (existentOrder) {
         if (controllerOrigin) {

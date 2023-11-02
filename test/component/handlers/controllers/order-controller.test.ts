@@ -167,7 +167,7 @@ describe('OrderController', () => {
         .set('x-api-key', envVars.API_SECRET)
         .expect(400);
 
-      expect(response.body).toBe('Bad request. Error: Invalid Order ID');
+      expect(response.body).toBe('Bad Request. Error: Invalid Order ID');
     });
 
     it('should return 401 (Unauthorized) with x-api-key is missing', async () => {
@@ -182,6 +182,16 @@ describe('OrderController', () => {
         .expect(401);
 
       expect(response.body).toBe('Unauthorized');
+    });
+
+    it('should return 404 (Not Found) with order not found', async () => {
+      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(null);
+      const response = await request(server)
+        .get(`/api/v1/orders/${orderId}`)
+        .set('x-api-key', envVars.API_SECRET)
+        .expect(404);
+
+      expect(response.body).toBe(`Order with ID ${orderId} not found`);
     });
 
     it('should return 500 (Internal Server Error) on error', async () => {
@@ -224,7 +234,7 @@ describe('OrderController', () => {
         .set('x-api-key', envVars.API_SECRET)
         .expect(400);
 
-      expect(response.body).toBe('Bad request. Error: Invalid Customer ID');
+      expect(response.body).toBe('Bad Request. Error: Invalid Customer ID');
     });
 
     it('should return 401 (Unauthorized) with x-api-key is missing', async () => {
@@ -283,7 +293,7 @@ describe('OrderController', () => {
         .set('x-api-key', envVars.API_SECRET)
         .expect(400);
 
-      expect(response.body).toBe('Bad request. Error: Invalid Status');
+      expect(response.body).toBe('Bad Request. Error: Invalid Status');
     });
 
     it('should return 401 (Unauthorized) with x-api-key is missing', async () => {
@@ -383,7 +393,7 @@ describe('OrderController', () => {
         })
         .expect(400);
 
-      expect(response.body).toBe('Bad request. Error: Invalid Customer ID');
+      expect(response.body).toBe('Bad Request. Error: Invalid Customer ID');
     });
 
     it('should return 400 (Bad Request) with invalid order date', async () => {
@@ -398,7 +408,7 @@ describe('OrderController', () => {
         })
         .expect(400);
 
-      expect(response.body).toBe('Bad request. Error: Invalid Order Date');
+      expect(response.body).toBe('Bad Request. Error: Invalid Order Date');
     });
 
     it('should return 400 (Bad Request) with invalid order id', async () => {
@@ -411,7 +421,7 @@ describe('OrderController', () => {
         })
         .expect(400);
 
-      expect(response.body).toBe('Bad request. Error: Invalid Order ID');
+      expect(response.body).toBe('Bad Request. Error: Invalid Order ID');
     });
 
     it('should return 400 (Bad Request) with invalid order items', async () => {
@@ -430,7 +440,7 @@ describe('OrderController', () => {
         })
         .expect(400);
 
-      expect(response.body).toBe('Bad request. Error: Invalid Product ID');
+      expect(response.body).toBe('Bad Request. Error: Invalid Product ID');
     });
 
     it('should return 400 (Bad Request) with invalid status', async () => {
@@ -445,7 +455,7 @@ describe('OrderController', () => {
         })
         .expect(400);
 
-      expect(response.body).toBe('Bad request. Error: Invalid Status');
+      expect(response.body).toBe('Bad Request. Error: Invalid Status');
     });
 
     it('should return 400 (Bad Request) when trying to update status via http request', async () => {
@@ -463,7 +473,7 @@ describe('OrderController', () => {
         .expect(400);
 
       expect(response.body).toBe(
-        'Bad request. Error: Cannot update order status directly via HTTP request',
+        'Bad Request. Error: Cannot update order status directly via HTTP request',
       );
     });
 
@@ -515,7 +525,7 @@ describe('OrderController', () => {
         .set('x-api-key', envVars.API_SECRET)
         .expect(400);
 
-      expect(response.body).toBe('Bad request. Error: Invalid Order ID');
+      expect(response.body).toBe('Bad Request. Error: Invalid Order ID');
     });
 
     it('should return 401 (Unauthorized) with x-api-key is missing', async () => {

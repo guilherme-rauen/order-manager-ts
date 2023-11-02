@@ -74,8 +74,11 @@ describe('MongoClient', () => {
     expect(logger.debug).toHaveBeenCalledWith('Database disconnected', { module: 'MongoClient' });
   });
 
-  it('should throw an error if trying to disconnect without an existing connection', () => {
+  it('should log an error if trying to disconnect without an existing connection', () => {
     mongoClient['connection'] = undefined;
-    expect(() => mongoClient.disconnect()).toThrow('Database connection not found');
+    expect(() => mongoClient.disconnect()).not.toThrow();
+    expect(logger.error).toHaveBeenCalledWith('Database connection not found', {
+      module: 'MongoClient',
+    });
   });
 });

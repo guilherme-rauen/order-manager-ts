@@ -1,14 +1,13 @@
 import { EventType } from '../domain/event';
 import { AmountMismatchException, InvalidOrderStatusException } from '../domain/exceptions';
-import { IOrderRepository } from '../domain/interfaces';
+import { ILogger, IOrderRepository } from '../domain/interfaces';
 import { Order, OrderStatus } from '../domain/order';
-import { Logger } from '../logger.module';
 
 export class OrderService {
   private readonly module = 'OrderService';
 
   constructor(
-    private readonly logger: Logger,
+    private readonly logger: ILogger,
     private readonly repository: IOrderRepository,
   ) {}
 

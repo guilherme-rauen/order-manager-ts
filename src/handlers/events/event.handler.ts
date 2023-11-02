@@ -10,15 +10,14 @@ import {
   ShipmentDeliveredEvent,
   ShipmentDispatchedEvent,
 } from '../../domain/event';
-import { IEventHandler } from '../../domain/interfaces';
-import { Logger } from '../../logger.module';
+import { IEventHandler, ILogger } from '../../domain/interfaces';
 
 export class EventHandler implements IEventHandler {
   private readonly module = 'EventHandler';
 
   constructor(
     private readonly eventEmitter: EventEmitter,
-    private readonly logger: Logger,
+    private readonly logger: ILogger,
     private readonly mapper: EventTypeMapper,
     private readonly orderService: OrderService,
   ) {

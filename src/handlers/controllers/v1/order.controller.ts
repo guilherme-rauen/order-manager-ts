@@ -7,10 +7,10 @@ import {
   ControllerValidationException,
   InvalidOrderStatusException,
   MissingEnvVarException,
+  ObjectNotFoundException,
 } from '../../../domain/exceptions';
-import { IEventHandler } from '../../../domain/interfaces';
+import { IEventHandler, ILogger } from '../../../domain/interfaces';
 import { Order, OrderStatus } from '../../../domain/order';
-import { Logger } from '../../../logger.module';
 
 /**
  * @openapi
@@ -64,7 +64,7 @@ export class OrderController {
 
   constructor(
     private readonly eventHandler: IEventHandler,
-    private readonly logger: Logger,
+    private readonly logger: ILogger,
     private readonly service: OrderService,
   ) {
     this.router = Router();
@@ -186,7 +186,7 @@ export class OrderController {
      *            schema:
      *              $ref: '#/components/schemas/Order'
      *      400:
-     *        description: Bad request
+     *        description: Bad Request
      *        content:
      *          application/json:
      *            schema:
@@ -199,6 +199,13 @@ export class OrderController {
      *            schema:
      *              type: string
      *              example: Unauthorized
+     *      404:
+     *        description: Order Not Found
+     *        content:
+     *          application/json:
+     *            schema:
+     *              type: string
+     *              example: Order with ID ORD-23-0WH1B71878 not found
      *      500:
      *        description: Internal Server Error
      *        content:
@@ -249,7 +256,11 @@ export class OrderController {
               return response.status(401).json(error.message);
             }
 
-            return response.status(400).json(`Bad request. Error: ${error.message}`);
+            return response.status(400).json(`Bad Request. Error: ${error.message}`);
+          }
+
+          if (error instanceof ObjectNotFoundException) {
+            return response.status(404).json(error.message);
           }
 
           return response.status(500).json('Internal Server Error');
@@ -288,7 +299,7 @@ export class OrderController {
      *              items:
      *                $ref: '#/components/schemas/Order'
      *      400:
-     *        description: Bad request
+     *        description: Bad Request
      *        content:
      *          application/json:
      *            schema:
@@ -349,7 +360,7 @@ export class OrderController {
               return response.status(401).json(error.message);
             }
 
-            return response.status(400).json(`Bad request. Error: ${error.message}`);
+            return response.status(400).json(`Bad Request. Error: ${error.message}`);
           }
 
           return response.status(500).json('Internal Server Error');
@@ -388,7 +399,7 @@ export class OrderController {
      *              items:
      *                $ref: '#/components/schemas/Order'
      *      400:
-     *        description: Bad request
+     *        description: Bad Request
      *        content:
      *          application/json:
      *            schema:
@@ -451,7 +462,7 @@ export class OrderController {
               return response.status(401).json(error.message);
             }
 
-            return response.status(400).json(`Bad request. Error: ${error.message}`);
+            return response.status(400).json(`Bad Request. Error: ${error.message}`);
           }
 
           return response.status(500).json('Internal Server Error');
@@ -489,7 +500,7 @@ export class OrderController {
      *            schema:
      *              $ref: '#/components/schemas/Order'
      *      400:
-     *        description: Bad request
+     *        description: Bad Request
      *        content:
      *          application/json:
      *            schema:
@@ -571,11 +582,11 @@ export class OrderController {
               return response.status(401).json(error.message);
             }
 
-            return response.status(400).json(`Bad request. Error: ${error.message}`);
+            return response.status(400).json(`Bad Request. Error: ${error.message}`);
           }
 
           if (error instanceof InvalidOrderStatusException) {
-            return response.status(400).json(`Bad request. Error: ${error.message}`);
+            return response.status(400).json(`Bad Request. Error: ${error.message}`);
           }
 
           return response.status(500).json('Internal Server Error');
@@ -613,7 +624,7 @@ export class OrderController {
      *              type: string
      *              example: ORD-23-0WH1B71878 successfully cancelled
      *      400:
-     *        description: Bad request
+     *        description: Bad Request
      *        content:
      *          application/json:
      *            schema:
@@ -676,7 +687,7 @@ export class OrderController {
               return response.status(401).json(error.message);
             }
 
-            return response.status(400).json(`Bad request. Error: ${error.message}`);
+            return response.status(400).json(`Bad Request. Error: ${error.message}`);
           }
 
           return response.status(500).json('Internal Server Error');
