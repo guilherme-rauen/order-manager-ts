@@ -12,9 +12,15 @@ export class OrderRepository implements IOrderRepository {
 
   /**
    * @property {String} model - The name of the model
-   * @description Prisma connection to the model specified
+   * @description Prisma connection to the Order model
    */
-  private readonly repository: PrismaClient['order'];
+  private readonly orderRepository: PrismaClient['order'];
+
+  /**
+   * @property {String} model - The name of the model
+   * @description Prisma connection to the OrderItem model
+   */
+  private readonly orderItemRepository: PrismaClient['orderItem'];
 
   /**
    *
@@ -28,7 +34,8 @@ export class OrderRepository implements IOrderRepository {
     private readonly logger: ILogger,
     private readonly mapper: OrderMapper,
   ) {
-    this.repository = this.connection.order;
+    this.orderRepository = this.connection.order;
+    this.orderItemRepository = this.connection.orderItem;
   }
 
   /**
@@ -45,7 +52,7 @@ export class OrderRepository implements IOrderRepository {
   private async add(order: IOrder): Promise<Order> {
     try {
       const { orderItems } = order;
-      const createdOrder = await this.repository.create({
+      const createdOrder = await this.orderRepository.create({
         data: { ...order, orderItems: { create: orderItems } },
         include: { orderItems: true },
       });
@@ -76,12 +83,16 @@ export class OrderRepository implements IOrderRepository {
   private async update(order: IOrder): Promise<Order> {
     try {
       const { orderId, orderItems } = order;
-      const updatedOrder = await this.repository.update({
+      await this.orderItemRepository.deleteMany({
+        where: { productId: { notIn: orderItems.map((item: IOrderItem) => item.productId) } },
+      });
+
+      const updatedOrder = await this.orderRepository.update({
         where: { orderId },
         data: {
           ...order,
           orderItems: {
-            upsert: orderItems.map(item => ({
+            upsert: orderItems.map((item: IOrderItem) => ({
               where: { productId: item.productId },
               create: item,
               update: item,
@@ -115,7 +126,7 @@ export class OrderRepository implements IOrderRepository {
    */
   public async getAllOrders(): Promise<Order[]> {
     try {
-      const orders = await this.repository.findMany({ include: { orderItems: true } });
+      const orders = await this.orderRepository.findMany({ include: { orderItems: true } });
       return orders.map((order: IOrder) => this.mapper.mapToDomain(order));
     } catch (error) {
       this.logger.error('Error getting all orders', { module: this.module, originalError: error });
@@ -136,7 +147,7 @@ export class OrderRepository implements IOrderRepository {
    */
   public async getOrdersByCustomerId(customerId: string): Promise<Order[]> {
     try {
-      const orders = await this.repository.findMany({
+      const orders = await this.orderRepository.findMany({
         where: { customerId },
         include: { orderItems: true },
       });
@@ -167,7 +178,7 @@ export class OrderRepository implements IOrderRepository {
    */
   public async getOrderById(orderId: string): Promise<Order> {
     try {
-      const order = await this.repository.findUnique({
+      const order = await this.orderRepository.findUnique({
         where: { orderId },
         include: { orderItems: true },
       });
@@ -196,7 +207,7 @@ export class OrderRepository implements IOrderRepository {
    */
   public async getOrdersByStatus(status: OrderStatus): Promise<Order[]> {
     try {
-      const orders = await this.repository.findMany({
+      const orders = await this.orderRepository.findMany({
         where: { status: status.toString() },
         include: { orderItems: true },
       });
@@ -226,7 +237,7 @@ export class OrderRepository implements IOrderRepository {
    */
   public async remove(orderId: string): Promise<void> {
     try {
-      const deletedOrder = await this.repository.findUnique({
+      const deletedOrder = await this.orderRepository.findUnique({
         where: { orderId },
         include: { orderItems: true },
       });
@@ -236,11 +247,11 @@ export class OrderRepository implements IOrderRepository {
       }
 
       const { orderItems } = deletedOrder;
-      await this.connection.orderItem.deleteMany({
+      await this.orderItemRepository.deleteMany({
         where: { productId: { in: orderItems.map((item: IOrderItem) => item.productId) } },
       });
 
-      await this.repository.delete({ where: { orderId } });
+      await this.orderRepository.delete({ where: { orderId } });
 
       return;
     } catch (error) {
@@ -270,7 +281,7 @@ export class OrderRepository implements IOrderRepository {
     try {
       const { orderId } = order;
       const orderModel = this.mapper.mapToModel(order);
-      const existentOrder = await this.repository.findUnique({ where: { orderId } });
+      const existentOrder = await this.orderRepository.findUnique({ where: { orderId } });
 
       if (existentOrder) {
         if (controllerOrigin) {
