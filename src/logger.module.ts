@@ -1,11 +1,8 @@
 import pino from 'pino';
 
-interface LoggerMetadata {
-  module: string;
-  [key: string]: unknown;
-}
+import { ILogger, ILoggerMetadata } from './domain/interfaces';
 
-export class Logger {
+export class Logger implements ILogger {
   private logger: pino.Logger;
 
   constructor(private readonly servicePrefix: string) {
@@ -32,19 +29,19 @@ export class Logger {
     return (error as Error).stack ?? (error as Error).message;
   }
 
-  public debug(message: string, metadata: LoggerMetadata) {
+  public debug(message: string, metadata: ILoggerMetadata): void {
     this.logger.debug(metadata, message);
   }
 
-  public info(message: string, metadata: LoggerMetadata) {
+  public info(message: string, metadata: ILoggerMetadata): void {
     this.logger.info(metadata, message);
   }
 
-  public warn(message: string, metadata: LoggerMetadata) {
+  public warn(message: string, metadata: ILoggerMetadata): void {
     this.logger.warn(metadata, message);
   }
 
-  public error(message: string, metadata: LoggerMetadata) {
+  public error(message: string, metadata: ILoggerMetadata): void {
     this.logger.error(metadata, message);
   }
 }

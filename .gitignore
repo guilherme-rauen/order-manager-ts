@@ -5,21 +5,20 @@ dist/
 coverage/
 
 # Database data directory
-docker/data
+docker/data/
 
 # Dependency directories
 node_modules/
 
 # Dev docker compose files
+docker-compose.mongo-dev.yml
 docker-compose.postgres-dev.yml
 
 # Environment variable files
 .env
+.env.mongo-dev
 .env.postgres-dev
 
 # IDE files
 .DS_Store
 .vscode
-
-# Mongo data directory
-docker/mongodb-data

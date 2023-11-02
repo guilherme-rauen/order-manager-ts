@@ -1,9 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 
 import { InvalidOrderStatusException, ObjectNotFoundException } from '../../../domain/exceptions';
-import { IOrder, IOrderItem, IOrderRepository } from '../../../domain/interfaces';
+import { ILogger, IOrder, IOrderItem, IOrderRepository } from '../../../domain/interfaces';
 import { Order, OrderStatus } from '../../../domain/order';
-import { Logger } from '../../../logger.module';
 import { OrderMapper } from '../mappers';
 
 export class OrderRepository implements IOrderRepository {
@@ -26,7 +25,7 @@ export class OrderRepository implements IOrderRepository {
    */
   constructor(
     private readonly connection: PrismaClient,
-    private readonly logger: Logger,
+    private readonly logger: ILogger,
     private readonly mapper: OrderMapper,
   ) {
     this.repository = this.connection.order;
