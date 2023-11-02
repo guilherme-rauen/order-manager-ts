@@ -4,15 +4,18 @@ dist/
 # Coverage directory used by tools like istanbul
 coverage/
 
+# Database data directory
+docker/data
+
 # Dependency directories
 node_modules/
 
 # Dev docker compose files
-docker-compose.dev.yml
+docker-compose.postgres-dev.yml
 
 # Environment variable files
 .env
-.env.dev
+.env.postgres-dev
 
 # IDE files
 .DS_Store

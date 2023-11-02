@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import { PrismaClient } from '@prisma/client';
 
 import {
   InvalidOrderStatusException,
@@ -10,18 +10,25 @@ import { OrderMapper } from '../../../../../src/infrastructure/db/mappers';
 import { OrderRepository } from '../../../../../src/infrastructure/db/repositories';
 import { Logger } from '../../../../../src/logger.module';
 
-jest.mock('mongoose');
-
 describe('OrderRepository', () => {
   let repository: OrderRepository;
 
-  const date = new Date();
   const mapper = new OrderMapper();
+  const prismaClient = new PrismaClient();
+
   const logger = {
     debug: jest.fn(),
     error: jest.fn(),
   } as unknown as Logger;
 
+  const findManySpy = jest.spyOn(prismaClient.order, 'findMany');
+  const findUniqueSpy = jest.spyOn(prismaClient.order, 'findUnique');
+  const createSpy = jest.spyOn(prismaClient.order, 'create');
+  const updateSpy = jest.spyOn(prismaClient.order, 'update');
+  const deleteSpy = jest.spyOn(prismaClient.order, 'delete');
+  const deleteManySpy = jest.spyOn(prismaClient.orderItem, 'deleteMany');
+
+  const date = new Date();
   const modelOrder: IOrder = {
     orderId: 'order-id-1',
     orderDate: date,
@@ -43,15 +50,7 @@ describe('OrderRepository', () => {
   };
 
   beforeEach(() => {
-    mongoose.model = jest.fn().mockReturnValue({
-      create: jest.fn(),
-      find: jest.fn(),
-      findOne: jest.fn(),
-      findOneAndDelete: jest.fn(),
-      findOneAndUpdate: jest.fn(),
-    } as unknown);
-
-    repository = new OrderRepository(mongoose, logger, mapper);
+    repository = new OrderRepository(prismaClient, logger, mapper);
   });
 
   afterEach(() => {
@@ -60,10 +59,10 @@ describe('OrderRepository', () => {
 
   describe('getAllOrders', () => {
     it('should return an array of domain objects of all orders', async () => {
-      (mongoose.model('Order').find as jest.Mock).mockResolvedValueOnce([modelOrder]);
+      findManySpy.mockResolvedValueOnce([modelOrder]);
 
       const result = await repository.getAllOrders();
-      expect(mongoose.model('Order').find).toHaveBeenCalledTimes(1);
+      expect(findManySpy).toHaveBeenCalledTimes(1);
 
       expect(result).toHaveLength(1);
       expect(result[0].customerId).toBe(modelOrder.customerId);
@@ -75,28 +74,28 @@ describe('OrderRepository', () => {
     });
 
     it('should return an empty array if no orders are found', async () => {
-      (mongoose.model('Order').find as jest.Mock).mockResolvedValueOnce([]);
+      findManySpy.mockResolvedValueOnce([]);
 
       const result = await repository.getAllOrders();
-      expect(mongoose.model('Order').find).toHaveBeenCalledTimes(1);
+      expect(findManySpy).toHaveBeenCalledTimes(1);
       expect(result).toHaveLength(0);
     });
 
     it('should throw an error if an error occurs', async () => {
       const error = new Error('error');
-      (mongoose.model('Order').find as jest.Mock).mockRejectedValueOnce(error);
+      findManySpy.mockRejectedValueOnce(error);
 
       await expect(repository.getAllOrders()).rejects.toThrow(error);
-      expect(mongoose.model('Order').find).toHaveBeenCalledTimes(1);
+      expect(findManySpy).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('getOrderById', () => {
     it('should return a domain object of an order', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
+      findUniqueSpy.mockResolvedValueOnce(modelOrder);
 
       const result = await repository.getOrderById('order-id-1');
-      expect(mongoose.model('Order').findOne).toHaveBeenCalledTimes(1);
+      expect(findUniqueSpy).toHaveBeenCalledTimes(1);
 
       expect(result.customerId).toBe(modelOrder.customerId);
       expect(result.orderDate).toBe(modelOrder.orderDate);
@@ -107,27 +106,27 @@ describe('OrderRepository', () => {
     });
 
     it('should throw an ObjectNotFoundException if no order is found', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(null);
+      findUniqueSpy.mockResolvedValueOnce(null);
 
       await expect(repository.getOrderById('order-id-1')).rejects.toThrow(ObjectNotFoundException);
-      expect(mongoose.model('Order').findOne).toHaveBeenCalledTimes(1);
+      expect(findUniqueSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should throw an error if an error occurs', async () => {
       const error = new Error('error');
-      (mongoose.model('Order').findOne as jest.Mock).mockRejectedValueOnce(error);
+      findUniqueSpy.mockRejectedValueOnce(error);
 
       await expect(repository.getOrderById('order-id-1')).rejects.toThrow(error);
-      expect(mongoose.model('Order').findOne).toHaveBeenCalledTimes(1);
+      expect(findUniqueSpy).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('getOrdersByCustomerId', () => {
     it('should return an array of domain objects of orders', async () => {
-      (mongoose.model('Order').find as jest.Mock).mockResolvedValueOnce([modelOrder]);
+      findManySpy.mockResolvedValueOnce([modelOrder]);
 
       const result = await repository.getOrdersByCustomerId('customer-id-1');
-      expect(mongoose.model('Order').find).toHaveBeenCalledTimes(1);
+      expect(findManySpy).toHaveBeenCalledTimes(1);
 
       expect(result).toHaveLength(1);
       expect(result[0].customerId).toBe(modelOrder.customerId);
@@ -139,29 +138,29 @@ describe('OrderRepository', () => {
     });
 
     it('should return an empty array if no orders are found', async () => {
-      (mongoose.model('Order').find as jest.Mock).mockResolvedValueOnce([]);
+      findManySpy.mockResolvedValueOnce([]);
 
       const result = await repository.getOrdersByCustomerId('customer-id-1');
-      expect(mongoose.model('Order').find).toHaveBeenCalledTimes(1);
+      expect(findManySpy).toHaveBeenCalledTimes(1);
       expect(result).toHaveLength(0);
     });
 
     it('should throw an error if an error occurs', async () => {
       const error = new Error('error');
-      (mongoose.model('Order').find as jest.Mock).mockRejectedValueOnce(error);
+      findManySpy.mockRejectedValueOnce(error);
 
       await expect(repository.getOrdersByCustomerId('customer-id-1')).rejects.toThrow(error);
-      expect(mongoose.model('Order').find).toHaveBeenCalledTimes(1);
+      expect(findManySpy).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('getOrdersByStatus', () => {
     it('should return an array of domain objects of orders', async () => {
-      (mongoose.model('Order').find as jest.Mock).mockResolvedValueOnce([modelOrder]);
+      findManySpy.mockResolvedValueOnce([modelOrder]);
 
       const status = new OrderStatus('PENDING');
       const result = await repository.getOrdersByStatus(status);
-      expect(mongoose.model('Order').find).toHaveBeenCalledTimes(1);
+      expect(findManySpy).toHaveBeenCalledTimes(1);
 
       expect(result).toHaveLength(1);
       expect(result[0].customerId).toBe(modelOrder.customerId);
@@ -173,45 +172,48 @@ describe('OrderRepository', () => {
     });
 
     it('should return an empty array if no orders are found', async () => {
-      (mongoose.model('Order').find as jest.Mock).mockResolvedValueOnce([]);
+      findManySpy.mockResolvedValueOnce([]);
 
       const status = new OrderStatus('PENDING');
       const result = await repository.getOrdersByStatus(status);
-      expect(mongoose.model('Order').find).toHaveBeenCalledTimes(1);
+      expect(findManySpy).toHaveBeenCalledTimes(1);
       expect(result).toHaveLength(0);
     });
 
     it('should throw an error if an error occurs', async () => {
       const error = new Error('error');
-      (mongoose.model('Order').find as jest.Mock).mockRejectedValueOnce(error);
+      findManySpy.mockRejectedValueOnce(error);
 
       const status = new OrderStatus('PENDING');
       await expect(repository.getOrdersByStatus(status)).rejects.toThrow(error);
-      expect(mongoose.model('Order').find).toHaveBeenCalledTimes(1);
+      expect(findManySpy).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('remove', () => {
     it('should remove an order', async () => {
-      (mongoose.model('Order').findOneAndDelete as jest.Mock).mockResolvedValueOnce(modelOrder);
+      findUniqueSpy.mockResolvedValueOnce(modelOrder);
+      (deleteManySpy as jest.Mock).mockResolvedValueOnce(null);
+      (deleteSpy as jest.Mock).mockResolvedValueOnce(null);
 
       await expect(repository.remove('order-id-1')).resolves.not.toThrow();
-      expect(mongoose.model('Order').findOneAndDelete).toHaveBeenCalledTimes(1);
+      expect(findUniqueSpy).toHaveBeenCalledTimes(1);
+      expect(deleteManySpy).toHaveBeenCalledTimes(1);
+      expect(deleteSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should throw an ObjectNotFoundException if no order is found', async () => {
-      (mongoose.model('Order').findOneAndDelete as jest.Mock).mockResolvedValueOnce(null);
-
+      findUniqueSpy.mockResolvedValueOnce(null);
       await expect(repository.remove('order-id-1')).rejects.toThrow(ObjectNotFoundException);
-      expect(mongoose.model('Order').findOneAndDelete).toHaveBeenCalledTimes(1);
+      expect(findUniqueSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should throw an error if an error occurs', async () => {
       const error = new Error('error');
-      (mongoose.model('Order').findOneAndDelete as jest.Mock).mockRejectedValueOnce(error);
+      findUniqueSpy.mockRejectedValueOnce(error);
 
       await expect(repository.remove('order-id-1')).rejects.toThrow(error);
-      expect(mongoose.model('Order').findOneAndDelete).toHaveBeenCalledTimes(1);
+      expect(findUniqueSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -219,11 +221,11 @@ describe('OrderRepository', () => {
     const domainOrder = mapper.mapToDomain(modelOrder);
 
     it('should create a new order if does not exist', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(null);
-      (mongoose.model('Order').create as jest.Mock).mockResolvedValueOnce(modelOrder);
+      findUniqueSpy.mockResolvedValueOnce(null);
+      (createSpy as jest.Mock).mockResolvedValueOnce(modelOrder);
 
       const result = await repository.store(domainOrder);
-      expect(mongoose.model('Order').create).toHaveBeenCalledTimes(1);
+      expect(createSpy).toHaveBeenCalledTimes(1);
 
       expect(result.customerId).toBe(domainOrder.customerId);
       expect(result.orderDate).toBe(domainOrder.orderDate);
@@ -239,13 +241,11 @@ describe('OrderRepository', () => {
         orderItems: [{ ...modelOrder.orderItems[0] }, { ...modelOrder.orderItems[1], quantity: 3 }],
       };
       const updatedOrder = mapper.mapToDomain(updatedModelOrder);
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
-      (mongoose.model('Order').findOneAndUpdate as jest.Mock).mockResolvedValueOnce(
-        updatedModelOrder,
-      );
+      findUniqueSpy.mockResolvedValueOnce(modelOrder);
+      updateSpy.mockResolvedValueOnce(updatedModelOrder);
 
       const result = await repository.store(updatedOrder, true);
-      expect(mongoose.model('Order').findOneAndUpdate).toHaveBeenCalledTimes(1);
+      expect(updateSpy).toHaveBeenCalledTimes(1);
 
       expect(result.customerId).toBe(updatedOrder.customerId);
       expect(result.orderDate).toBe(updatedOrder.orderDate);
@@ -257,28 +257,38 @@ describe('OrderRepository', () => {
 
     it('should throw an InvalidOrderStatusException if try to update the status', async () => {
       const updatedDomainOrder = mapper.mapToDomain({ ...modelOrder, status: 'CONFIRMED' });
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
+      findUniqueSpy.mockResolvedValueOnce(modelOrder);
 
       await expect(repository.store(updatedDomainOrder, true)).rejects.toThrow(
         InvalidOrderStatusException,
       );
-      expect(mongoose.model('Order').findOneAndUpdate).toHaveBeenCalledTimes(0);
+      expect(updateSpy).toHaveBeenCalledTimes(0);
     });
 
-    it('should throw an ObjectNotFoundException if order is not found after update', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
-      (mongoose.model('Order').findOneAndUpdate as jest.Mock).mockResolvedValueOnce(null);
-
-      await expect(repository.store(domainOrder, true)).rejects.toThrow(ObjectNotFoundException);
-      expect(mongoose.model('Order').findOneAndUpdate).toHaveBeenCalledTimes(1);
-    });
-
-    it('should throw an error if an error occurs', async () => {
+    it('should throw an error if an error occurs creating the order', async () => {
       const error = new Error('error');
-      (mongoose.model('Order').create as jest.Mock).mockRejectedValueOnce(error);
+      findUniqueSpy.mockResolvedValueOnce(null);
+      createSpy.mockRejectedValueOnce(error);
 
       await expect(repository.store(domainOrder, true)).rejects.toThrow(error);
-      expect(mongoose.model('Order').create).toHaveBeenCalledTimes(1);
+      expect(findUniqueSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw an error if an error occurs retrieving the order', async () => {
+      const error = new Error('error');
+      findUniqueSpy.mockRejectedValueOnce(error);
+
+      await expect(repository.store(domainOrder, true)).rejects.toThrow(error);
+      expect(findUniqueSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw an error if an error occurs updating the order', async () => {
+      const error = new Error('error');
+      findUniqueSpy.mockResolvedValueOnce(modelOrder);
+      updateSpy.mockRejectedValueOnce(error);
+
+      await expect(repository.store(domainOrder, true)).rejects.toThrow(error);
+      expect(findUniqueSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

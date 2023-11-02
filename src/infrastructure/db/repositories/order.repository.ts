@@ -1,11 +1,10 @@
-import mongoose, { Model } from 'mongoose';
+import { PrismaClient } from '@prisma/client';
 
 import { InvalidOrderStatusException, ObjectNotFoundException } from '../../../domain/exceptions';
-import { IOrder, IOrderRepository } from '../../../domain/interfaces';
+import { IOrder, IOrderItem, IOrderRepository } from '../../../domain/interfaces';
 import { Order, OrderStatus } from '../../../domain/order';
 import { Logger } from '../../../logger.module';
 import { OrderMapper } from '../mappers';
-import { OrderSchema } from '../mongo/schemas';
 
 export class OrderRepository implements IOrderRepository {
   private readonly model = 'Order';
@@ -13,24 +12,24 @@ export class OrderRepository implements IOrderRepository {
   private readonly module = 'OrderRepository';
 
   /**
-   * @description
-   * Repository is a mongoose model that represents the Order collection in mongo
+   * @property {String} model - The name of the model
+   * @description Prisma connection to the model specified
    */
-  private readonly repository: Model<IOrder>;
+  private readonly repository: PrismaClient['order'];
 
   /**
    *
-   * @param {mongoose} connection  - The connection to mongo
+   * @param {PrismaClient} connection  - The connection to the database through Prisma
    * @param {Logger} logger - The logger module
    * @param {OrderMapper} mapper - The order mapper to map from domain to model and vice versa
    *
    */
   constructor(
-    private readonly connection: typeof mongoose,
+    private readonly connection: PrismaClient,
     private readonly logger: Logger,
     private readonly mapper: OrderMapper,
   ) {
-    this.repository = this.connection.model(this.model, OrderSchema);
+    this.repository = this.connection.order;
   }
 
   /**
@@ -46,7 +45,12 @@ export class OrderRepository implements IOrderRepository {
    */
   private async add(order: IOrder): Promise<Order> {
     try {
-      const createdOrder = await this.repository.create(order);
+      const { orderItems } = order;
+      const createdOrder = await this.repository.create({
+        data: { ...order, orderItems: { create: orderItems } },
+        include: { orderItems: true },
+      });
+
       return this.mapper.mapToDomain(createdOrder);
     } catch (error) {
       this.logger.error('Error adding order', {
@@ -64,7 +68,6 @@ export class OrderRepository implements IOrderRepository {
    * @param {IOrder} order - The order to be updated
    * @returns {Promise<Order>} - Returns a promise that resolves to an Order
    *
-   * @throws {ObjectNotFoundException} - If the order does not exist
    * @throws {Error} - If there is an error updating the order
    *
    * @description
@@ -73,15 +76,21 @@ export class OrderRepository implements IOrderRepository {
    */
   private async update(order: IOrder): Promise<Order> {
     try {
-      const updatedOrder = await this.repository.findOneAndUpdate(
-        { orderId: order.orderId },
-        order,
-        { new: true },
-      );
-
-      if (!updatedOrder) {
-        throw new ObjectNotFoundException(this.model, order.orderId);
-      }
+      const { orderId, orderItems } = order;
+      const updatedOrder = await this.repository.update({
+        where: { orderId },
+        data: {
+          ...order,
+          orderItems: {
+            upsert: orderItems.map(item => ({
+              where: { productId: item.productId },
+              create: item,
+              update: item,
+            })),
+          },
+        },
+        include: { orderItems: true },
+      });
 
       return this.mapper.mapToDomain(updatedOrder);
     } catch (error) {
@@ -107,8 +116,8 @@ export class OrderRepository implements IOrderRepository {
    */
   public async getAllOrders(): Promise<Order[]> {
     try {
-      const orders = await this.repository.find();
-      return orders.map(order => this.mapper.mapToDomain(order));
+      const orders = await this.repository.findMany({ include: { orderItems: true } });
+      return orders.map((order: IOrder) => this.mapper.mapToDomain(order));
     } catch (error) {
       this.logger.error('Error getting all orders', { module: this.module, originalError: error });
       throw error;
@@ -128,8 +137,12 @@ export class OrderRepository implements IOrderRepository {
    */
   public async getOrdersByCustomerId(customerId: string): Promise<Order[]> {
     try {
-      const orders = await this.repository.find({ customerId });
-      return orders.map(order => this.mapper.mapToDomain(order));
+      const orders = await this.repository.findMany({
+        where: { customerId },
+        include: { orderItems: true },
+      });
+
+      return orders.map((order: IOrder) => this.mapper.mapToDomain(order));
     } catch (error) {
       this.logger.error('Error getting orders by customer id', {
         module: this.module,
@@ -155,7 +168,11 @@ export class OrderRepository implements IOrderRepository {
    */
   public async getOrderById(orderId: string): Promise<Order> {
     try {
-      const order = await this.repository.findOne({ orderId });
+      const order = await this.repository.findUnique({
+        where: { orderId },
+        include: { orderItems: true },
+      });
+
       if (!order) {
         throw new ObjectNotFoundException(this.model, orderId);
       }
@@ -180,13 +197,18 @@ export class OrderRepository implements IOrderRepository {
    */
   public async getOrdersByStatus(status: OrderStatus): Promise<Order[]> {
     try {
-      const orders = await this.repository.find({ status });
-      return orders.map(order => this.mapper.mapToDomain(order));
+      const orders = await this.repository.findMany({
+        where: { status: status.toString() },
+        include: { orderItems: true },
+      });
+
+      return orders.map((order: IOrder) => this.mapper.mapToDomain(order));
     } catch (error) {
       this.logger.error('Error getting orders by status', {
         module: this.module,
         originalError: error,
       });
+
       throw error;
     }
   }
@@ -205,10 +227,21 @@ export class OrderRepository implements IOrderRepository {
    */
   public async remove(orderId: string): Promise<void> {
     try {
-      const deletedOrder = await this.repository.findOneAndDelete({ orderId });
+      const deletedOrder = await this.repository.findUnique({
+        where: { orderId },
+        include: { orderItems: true },
+      });
+
       if (!deletedOrder) {
         throw new ObjectNotFoundException(this.model, orderId);
       }
+
+      const { orderItems } = deletedOrder;
+      await this.connection.orderItem.deleteMany({
+        where: { productId: { in: orderItems.map((item: IOrderItem) => item.productId) } },
+      });
+
+      await this.repository.delete({ where: { orderId } });
 
       return;
     } catch (error) {
@@ -231,12 +264,14 @@ export class OrderRepository implements IOrderRepository {
    *
    * @description
    * Stores an order to the database
+   * Note: This method cannot be used to update the status of an order directly via HTTP request
    *
    */
   public async store(order: Order, controllerOrigin?: boolean): Promise<Order> {
     try {
+      const { orderId } = order;
       const orderModel = this.mapper.mapToModel(order);
-      const existentOrder = await this.repository.findOne({ orderId: order.orderId });
+      const existentOrder = await this.repository.findUnique({ where: { orderId } });
 
       if (existentOrder) {
         if (controllerOrigin) {
