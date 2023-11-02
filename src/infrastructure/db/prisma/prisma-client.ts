@@ -1,14 +1,14 @@
 import { PrismaClient as Prisma } from '@prisma/client';
 
 import { MissingEnvVarException } from '../../../domain/exceptions';
-import { Logger } from '../../../logger.module';
+import { ILogger } from '../../../domain/interfaces';
 
 export class PrismaClient {
   private readonly module = 'PrismaClient';
 
   private connection?: Prisma;
 
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly logger: ILogger) {}
 
   public async connect(): Promise<Prisma> {
     if (this.connection) {

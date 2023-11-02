@@ -183,7 +183,8 @@ describe('OrderController', () => {
     });
 
     it('should return 404 (Not Found) with order not found', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(null);
+      findUniqueSpy.mockResolvedValueOnce(null);
+
       const response = await request(server)
         .get(`/api/v1/orders/${orderId}`)
         .set('x-api-key', envVars.API_SECRET)
