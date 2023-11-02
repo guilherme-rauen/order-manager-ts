@@ -4,6 +4,9 @@ dist/
 # Coverage directory used by tools like istanbul
 coverage/
 
+# Database data directory
+docker/data/
+
 # Dependency directories
 node_modules/
 
@@ -17,6 +20,3 @@ docker-compose.dev.yml
 # IDE files
 .DS_Store
 .vscode
-
-# Mongo data directory
-docker/mongodb-data
