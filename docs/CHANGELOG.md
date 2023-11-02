@@ -7,3 +7,4 @@
   - Create new orders
   - Retrieve orders
   - Update orders
+  - Cancel orders
