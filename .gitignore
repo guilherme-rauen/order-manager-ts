@@ -7,8 +7,12 @@ coverage/
 # Dependency directories
 node_modules/
 
+# Dev docker compose files
+docker-compose.dev.yml
+
 # Environment variable files
 .env
+.env.dev
 
 # IDE files
 .DS_Store
