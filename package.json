@@ -1,6 +1,6 @@
 {
   "name": "order-manager",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "author": "Guilherme Rauen",
   "description": "Order Management System using Domain-Driven Design (DDD).",

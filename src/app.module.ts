@@ -135,7 +135,7 @@ export class AppModule {
             this.logger.debug('Event Listeners removed', { module: this.module });
           }
 
-          /** Disconnect the MongoDB Client */
+          /** Disconnect the Prisma Client */
           if (this.prismaClient) {
             await this.prismaClient.disconnect();
           }

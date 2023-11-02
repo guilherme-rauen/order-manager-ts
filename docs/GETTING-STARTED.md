@@ -8,7 +8,7 @@
 ## Running Dependencies
 
 ```
-docker-compose -f ./docker/docker-compose.yml up -d           # start mongo instance (database depedency)
+docker-compose -f ./docker/docker-compose.yml up -d           # start postgres instance (database depedency)
 ```
 
 ## Setting Environment Variables
