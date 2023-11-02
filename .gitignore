@@ -11,11 +11,11 @@ docker/data/
 node_modules/
 
 # Dev docker compose files
-docker-compose.dev.yml
+docker-compose.mongo-dev.yml
 
 # Environment variable files
 .env
-.env.dev
+.env.mongo-dev
 
 # IDE files
 .DS_Store
