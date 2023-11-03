@@ -4,9 +4,11 @@ WORKDIR /app
 
 FROM base as build 
 
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json schema.prisma ./
 
 RUN npm ci
+
+RUN npm run prisma:generate
 
 COPY . .
 
