@@ -33,6 +33,7 @@ describe('OrderController', () => {
   } as unknown as EventHandler;
 
   const emitEventSpy = jest.spyOn(eventHandler, 'emitEvent');
+  const deleteManySpy = jest.spyOn(prisma.orderItem, 'deleteMany');
   const findManySpy = jest.spyOn(prisma.order, 'findMany');
   const findUniqueSpy = jest.spyOn(prisma.order, 'findUnique');
   const createSpy = jest.spyOn(prisma.order, 'create');
@@ -364,6 +365,7 @@ describe('OrderController', () => {
       };
 
       findUniqueSpy.mockResolvedValueOnce(modelOrder);
+      deleteManySpy.mockResolvedValueOnce(null as unknown as never);
       updateSpy.mockResolvedValueOnce(updatedModelOrder);
 
       const result = await request(server)

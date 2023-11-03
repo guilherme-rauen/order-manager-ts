@@ -10,6 +10,21 @@ import { OrderMapper } from '../../../../../src/infrastructure/db/mappers';
 import { OrderRepository } from '../../../../../src/infrastructure/db/repositories';
 import { Logger } from '../../../../../src/logger.module';
 
+jest.mock('@prisma/client', () => ({
+  PrismaClient: jest.fn().mockImplementation(() => ({
+    order: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    orderItem: {
+      deleteMany: jest.fn(),
+    },
+  })),
+}));
+
 describe('OrderRepository', () => {
   let repository: OrderRepository;
 
