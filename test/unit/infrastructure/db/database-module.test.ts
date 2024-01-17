@@ -1,13 +1,13 @@
-import mongoose from 'mongoose';
+import { PrismaClient as Prisma } from '@prisma/client';
 
 import { DatabaseModule } from '../../../../src/infrastructure/db/database.module';
-import { MongoClient } from '../../../../src/infrastructure/db/mongo';
+import { PrismaClient } from '../../../../src/infrastructure/db/prisma';
 import { Logger } from '../../../../src/logger.module';
 
-jest.mock('../../../../src/infrastructure/db/mongo/mongo-client');
+jest.mock('../../../../src/infrastructure/db/prisma/prisma-client');
 
 describe('DatabaseModule', () => {
-  let mongoClientMock: jest.Mocked<MongoClient>;
+  let prismaClientMock: jest.Mocked<PrismaClient>;
   let databaseModule: DatabaseModule;
 
   const logger = {
@@ -15,21 +15,21 @@ describe('DatabaseModule', () => {
   } as unknown as Logger;
 
   beforeEach(() => {
-    mongoClientMock = new MongoClient(logger) as jest.Mocked<MongoClient>;
-    databaseModule = new DatabaseModule(mongoClientMock);
+    prismaClientMock = new PrismaClient(logger) as jest.Mocked<PrismaClient>;
+    databaseModule = new DatabaseModule(prismaClientMock);
   });
 
   it('should connect to the database', async () => {
-    const mockResponse = jest.fn();
-    mongoClientMock.connect.mockResolvedValue(mockResponse as unknown as typeof mongoose);
+    const mockResponse = jest.fn() as unknown as Prisma;
+    prismaClientMock.connect.mockResolvedValue(mockResponse);
 
     const result = await databaseModule.connect();
-    expect(mongoClientMock.connect).toHaveBeenCalledTimes(1);
+    expect(prismaClientMock.connect).toHaveBeenCalledTimes(1);
     expect(result).toBe(mockResponse);
   });
 
   it('should disconnect from the database', () => {
     databaseModule.disconnect();
-    expect(mongoClientMock.disconnect).toHaveBeenCalledTimes(1);
+    expect(prismaClientMock.disconnect).toHaveBeenCalledTimes(1);
   });
 });

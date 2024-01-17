@@ -1,43 +1,45 @@
-import mongoose from 'mongoose';
+import { PrismaClient as Prisma } from '@prisma/client';
 
 import { MissingEnvVarException } from '../../../domain/exceptions';
 import { ILogger } from '../../../domain/interfaces';
 
-export class MongoClient {
-  private readonly module = 'MongoClient';
+export class PrismaClient {
+  private readonly module = 'PrismaClient';
 
-  private connection?: typeof mongoose;
+  private connection?: Prisma;
 
   constructor(private readonly logger: ILogger) {}
 
-  public async connect(): Promise<typeof mongoose> {
+  public async connect(): Promise<Prisma> {
     if (this.connection) {
       return this.connection;
     }
 
-    const { APP_NAME, MONGO_URI } = process.env;
-    if (!MONGO_URI) {
-      this.logger.error('MONGO_URI not found', { module: this.module });
-      throw new MissingEnvVarException('MONGO_URI not found');
+    const { DATABASE_URL } = process.env;
+    if (!DATABASE_URL) {
+      throw new MissingEnvVarException('DATABASE_URL not found');
     }
 
     try {
-      this.connection = await mongoose.connect(MONGO_URI, {
-        authMechanism: 'DEFAULT',
-        dbName: APP_NAME || 'test',
-      });
+      const client = new Prisma();
+      await client.$connect();
+      this.connection = client;
 
       this.logger.debug('Database connected', { module: this.module });
       return this.connection;
     } catch (error) {
-      this.logger.error('Database connection failed', { module: this.module });
+      this.logger.error('Database connection failed', {
+        module: this.module,
+        originalError: error,
+      });
+
       throw error;
     }
   }
 
   public disconnect(): void {
     if (this.connection) {
-      this.connection.disconnect();
+      this.connection.$disconnect();
       this.logger.debug('Database disconnected', { module: this.module });
       return;
     }

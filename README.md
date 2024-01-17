@@ -39,7 +39,7 @@ If this service is down:
 
 ## Sub-Components, Infrastructure/Service Dependencies
 
-- [Mongo](https://www.mongodb.com/atlas/database)
+- [Postgres](https://www.postgresql.org/about/)
 
 ## Architecture & Technologies
 
@@ -65,7 +65,7 @@ If this service is down:
 
 - **Persistence**:
 
-  - [**Database Module**](./src/infrastructure/db/database.module.ts) with [Mongo Client](./src/infrastructure/db/mongo/mongo-client.ts) using [mongoose](https://mongoosejs.com/)
+  - [**Database Module**](./src/infrastructure/db/database.module.ts) with [Prisma Client](./src/infrastructure/db/prisma/prisma-client.ts) using [Prisma](https://www.prisma.io/)
 
 - **Exceptions**:
 

@@ -8,6 +8,10 @@ COPY package.json package-lock.json ./
 
 RUN npm ci
 
+COPY ./src/infrastructure/db/prisma/schema.prisma ./src/infrastructure/db/prisma/
+
+RUN npm run prisma:generate
+
 COPY . .
 
 RUN npm run build:prod

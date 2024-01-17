@@ -6,12 +6,7 @@
   "coverageDirectory": "coverage",
   "collectCoverageFrom": ["src/**/*.ts"],
   "coverageReporters": ["html", "text", "text-summary", "cobertura"],
-  "coveragePathIgnorePatterns": [
-    "src/app.module.ts",
-    "src/logger.module.ts",
-    "src/index.ts",
-    "src/infrastructure/db/mongo/models"
-  ],
+  "coveragePathIgnorePatterns": ["src/app.module.ts", "src/index.ts", "src/logger.module.ts"],
   "testEnvironment": "node",
   "coverageThreshold": {
     "global": {

@@ -1,6 +1,6 @@
+import { PrismaClient as Prisma } from '@prisma/client';
 import express from 'express';
 import { Server } from 'http';
-import mongoose from 'mongoose';
 import request from 'supertest';
 
 import { OrderService } from '../../../../src/application';
@@ -13,8 +13,6 @@ import { OrderMapper } from '../../../../src/infrastructure/db/mappers';
 import { OrderRepository } from '../../../../src/infrastructure/db/repositories';
 import { Logger } from '../../../../src/logger.module';
 
-jest.mock('mongoose');
-
 describe('OrderController', () => {
   let app: express.Application;
   let server: Server;
@@ -22,6 +20,8 @@ describe('OrderController', () => {
 
   const envVars = { API_SECRET: 'test-secret-api' };
   process.env = Object.assign(process.env, envVars);
+
+  const prisma = new Prisma();
 
   const logger = {
     debug: jest.fn(),
@@ -33,6 +33,11 @@ describe('OrderController', () => {
   } as unknown as EventHandler;
 
   const emitEventSpy = jest.spyOn(eventHandler, 'emitEvent');
+  const deleteManySpy = jest.spyOn(prisma.orderItem, 'deleteMany');
+  const findManySpy = jest.spyOn(prisma.order, 'findMany');
+  const findUniqueSpy = jest.spyOn(prisma.order, 'findUnique');
+  const createSpy = jest.spyOn(prisma.order, 'create');
+  const updateSpy = jest.spyOn(prisma.order, 'update');
 
   const date = new Date();
   const orderId = 'ORD-23-0WH1B71878';
@@ -56,16 +61,8 @@ describe('OrderController', () => {
     orderItems: modelOrder.orderItems,
   };
 
-  beforeEach(() => {
-    mongoose.model = jest.fn().mockReturnValue({
-      create: jest.fn(),
-      find: jest.fn(),
-      findOne: jest.fn(),
-      findOneAndDelete: jest.fn(),
-      findOneAndUpdate: jest.fn(),
-    } as unknown);
-
-    const repository = new OrderRepository(mongoose, logger, new OrderMapper());
+  beforeEach(async () => {
+    const repository = new OrderRepository(prisma, logger, new OrderMapper());
     service = new OrderService(logger, repository);
     const controller = new OrderController(eventHandler, logger, service);
 
@@ -96,7 +93,8 @@ describe('OrderController', () => {
 
   describe('GET /api/v1/orders', () => {
     it('should return 200 (OK) on success', async () => {
-      (mongoose.model('Order').find as jest.Mock).mockResolvedValueOnce([modelOrder]);
+      findManySpy.mockResolvedValueOnce([modelOrder]);
+
       const result = await request(server)
         .get('/api/v1/orders')
         .set('x-api-key', envVars.API_SECRET)
@@ -129,7 +127,7 @@ describe('OrderController', () => {
     });
 
     it('should return 500 (Internal Server Error) on error', async () => {
-      (mongoose.model('Order').find as jest.Mock).mockRejectedValueOnce(() => {
+      findManySpy.mockRejectedValueOnce(() => {
         throw new Error('Test error');
       });
 
@@ -144,7 +142,8 @@ describe('OrderController', () => {
 
   describe('GET /api/v1/orders/:orderId', () => {
     it('should return 200 (OK) on success', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
+      findUniqueSpy.mockResolvedValueOnce(modelOrder);
+
       const result = await request(server)
         .get(`/api/v1/orders/${orderId}`)
         .set('x-api-key', envVars.API_SECRET)
@@ -185,7 +184,8 @@ describe('OrderController', () => {
     });
 
     it('should return 404 (Not Found) with order not found', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(null);
+      findUniqueSpy.mockResolvedValueOnce(null);
+
       const response = await request(server)
         .get(`/api/v1/orders/${orderId}`)
         .set('x-api-key', envVars.API_SECRET)
@@ -195,7 +195,7 @@ describe('OrderController', () => {
     });
 
     it('should return 500 (Internal Server Error) on error', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockRejectedValueOnce(() => {
+      findUniqueSpy.mockRejectedValueOnce(() => {
         throw new Error('Test error');
       });
 
@@ -210,7 +210,8 @@ describe('OrderController', () => {
 
   describe('GET /api/v1/orders/customer/:customerId', () => {
     it('should return 200 (OK) on success', async () => {
-      (mongoose.model('Order').find as jest.Mock).mockResolvedValueOnce([modelOrder]);
+      findManySpy.mockResolvedValueOnce([modelOrder]);
+
       const result = await request(server)
         .get(`/api/v1/orders/customer/${modelOrder.customerId}`)
         .set('x-api-key', envVars.API_SECRET)
@@ -254,7 +255,7 @@ describe('OrderController', () => {
     });
 
     it('should return 500 (Internal Server Error) on error', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockRejectedValueOnce(() => {
+      findManySpy.mockRejectedValueOnce(() => {
         throw new Error('Test error');
       });
 
@@ -269,7 +270,8 @@ describe('OrderController', () => {
 
   describe('GET /api/v1/orders/status/:status', () => {
     it('should return 200 (OK) on success', async () => {
-      (mongoose.model('Order').find as jest.Mock).mockResolvedValueOnce([modelOrder]);
+      findManySpy.mockResolvedValueOnce([modelOrder]);
+
       const result = await request(server)
         .get(`/api/v1/orders/status/${modelOrder.status}`)
         .set('x-api-key', envVars.API_SECRET)
@@ -313,7 +315,7 @@ describe('OrderController', () => {
     });
 
     it('should return 500 (Internal Server Error) on error', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockRejectedValueOnce(() => {
+      findManySpy.mockRejectedValueOnce(() => {
         throw new Error('Test error');
       });
 
@@ -328,8 +330,9 @@ describe('OrderController', () => {
 
   describe('POST /api/v1/orders', () => {
     it('should return 200 (OK) on success - create', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(null);
-      (mongoose.model('Order').create as jest.Mock).mockResolvedValueOnce(modelOrder);
+      findUniqueSpy.mockResolvedValueOnce(null);
+      createSpy.mockResolvedValueOnce(modelOrder);
+
       const result = await request(server)
         .post('/api/v1/orders')
         .set('x-api-key', envVars.API_SECRET)
@@ -361,10 +364,9 @@ describe('OrderController', () => {
         orderItems: [{ ...modelOrder.orderItems[0], quantity: newQuantity }],
       };
 
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
-      (mongoose.model('Order').findOneAndUpdate as jest.Mock).mockResolvedValueOnce(
-        updatedModelOrder,
-      );
+      findUniqueSpy.mockResolvedValueOnce(modelOrder);
+      deleteManySpy.mockResolvedValueOnce(null as unknown as never);
+      updateSpy.mockResolvedValueOnce(updatedModelOrder);
 
       const result = await request(server)
         .post('/api/v1/orders')
@@ -459,7 +461,7 @@ describe('OrderController', () => {
     });
 
     it('should return 400 (Bad Request) when trying to update status via http request', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockResolvedValueOnce(modelOrder);
+      findUniqueSpy.mockResolvedValueOnce(modelOrder);
 
       const response = await request(server)
         .post('/api/v1/orders')
@@ -493,7 +495,7 @@ describe('OrderController', () => {
     });
 
     it('should return 500 (Internal Server Error) on error', async () => {
-      (mongoose.model('Order').findOne as jest.Mock).mockRejectedValueOnce(() => {
+      findUniqueSpy.mockRejectedValueOnce(() => {
         throw new Error('Test error');
       });
 

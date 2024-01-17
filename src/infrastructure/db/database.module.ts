@@ -1,11 +1,11 @@
-import mongoose from 'mongoose';
+import { PrismaClient as Prisma } from '@prisma/client';
 
-import { MongoClient } from './mongo';
+import { PrismaClient } from './prisma/prisma-client';
 
 export class DatabaseModule {
-  constructor(private readonly client: MongoClient) {}
+  constructor(private readonly client: PrismaClient) {}
 
-  public async connect(): Promise<typeof mongoose> {
+  public async connect(): Promise<Prisma> {
     return await this.client.connect();
   }
 

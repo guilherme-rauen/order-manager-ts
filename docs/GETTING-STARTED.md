@@ -8,7 +8,7 @@
 ## Running Dependencies
 
 ```
-docker-compose -f ./docker/docker-compose.yml up -d           # start mongo instance (database depedency)
+docker-compose -f ./docker/docker-compose.yml up -d           # start postgres instance (database depedency)
 ```
 
 ## Setting Environment Variables
@@ -21,6 +21,8 @@ rename .env.sample => .env                                    # set up required 
 
 ```
 npm ci                                                        # install dependencies
+npm run prisma:generate                                       # build prisma client based on the schema
+npm run prisma:migration                                      # apply the schema migrations to the database
 npm run build                                                 # build the application
 ```
 

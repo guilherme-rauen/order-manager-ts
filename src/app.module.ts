@@ -14,13 +14,11 @@ import { EventHandler } from './handlers/events';
 import { EventTypeMapper } from './handlers/events/mappers';
 import { DatabaseModule } from './infrastructure/db/database.module';
 import { OrderMapper } from './infrastructure/db/mappers';
-import { MongoClient } from './infrastructure/db/mongo';
+import { PrismaClient } from './infrastructure/db/prisma';
 import { OrderRepository } from './infrastructure/db/repositories';
 
 export class AppModule {
   private readonly module = 'AppModule';
-
-  private mongoClient?: MongoClient;
 
   private databaseModule?: DatabaseModule;
 
@@ -42,6 +40,8 @@ export class AppModule {
 
   private paymentMapper?: PaymentMapper;
 
+  private prismaClient?: PrismaClient;
+
   private server?: Server;
 
   private shipmentMapper?: ShipmentMapper;
@@ -51,11 +51,11 @@ export class AppModule {
   constructor(private readonly logger: ILogger) {}
 
   public async start(): Promise<void> {
-    /** Instantiate the MongoDB Client */
-    this.mongoClient = new MongoClient(this.logger);
+    /** Instantiate the Prisma Client */
+    this.prismaClient = new PrismaClient(this.logger);
 
     /** Instantiate the Database Module */
-    this.databaseModule = new DatabaseModule(this.mongoClient);
+    this.databaseModule = new DatabaseModule(this.prismaClient);
     const connection = await this.databaseModule.connect();
 
     /** Instantiate the Mappers */
@@ -90,7 +90,7 @@ export class AppModule {
     );
 
     /** Instantiate and Start the Express Server */
-    const port = parseInt(process.env.PORT ?? '3000', 10);
+    const port = parseInt(process.env.PORT || '3000', 10);
     const app = express();
     app.use(express.json());
     app.use(helmet());
@@ -135,9 +135,9 @@ export class AppModule {
             this.logger.debug('Event Listeners removed', { module: this.module });
           }
 
-          /** Disconnect the MongoDB Client */
-          if (this.mongoClient) {
-            await this.mongoClient.disconnect();
+          /** Disconnect the Prisma Client */
+          if (this.prismaClient) {
+            await this.prismaClient.disconnect();
           }
         });
       } catch (error) {
