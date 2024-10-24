@@ -31,7 +31,7 @@ export class EventTypeMapper {
         return EventType.SHIPPED;
 
       default:
-        throw new Error(`Event type not found for: ${data.constructor.name}`);
+        throw new Error('Event type not found');
     }
   }
 }

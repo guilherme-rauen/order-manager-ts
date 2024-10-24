@@ -121,7 +121,7 @@ export class OrderController {
     this.router.get(
       '/v1/orders',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
-      async (request: Request, response: Response) => {
+      async (request: Request, response: Response): Promise<void> => {
         try {
           const errors = validationResult(request);
           if (!errors.isEmpty()) {
@@ -146,13 +146,16 @@ export class OrderController {
             endpoint: request.url,
           });
 
-          return response.status(200).json(orders);
+          response.status(200).json(orders);
+          return;
         } catch (error) {
           if (error instanceof ControllerValidationException) {
-            return response.status(401).json(error.message);
+            response.status(401).json(error.message);
+            return;
           }
 
-          return response.status(500).json('Internal Server Error');
+          response.status(500).json('Internal Server Error');
+          return;
         }
       },
     );
@@ -222,7 +225,7 @@ export class OrderController {
       param('orderId')
         .custom(orderId => (Order.validateOrderId(orderId) ? true : false))
         .withMessage('Invalid Order ID'),
-      async (request: Request, response: Response) => {
+      async (request: Request, response: Response): Promise<void> => {
         const { orderId } = request.params;
 
         try {
@@ -249,21 +252,26 @@ export class OrderController {
             endpoint: request.url,
           });
 
-          return response.status(200).json(order);
+          response.status(200).json(order);
+          return;
         } catch (error) {
           if (error instanceof ControllerValidationException) {
             if (error.message.includes('Unauthorized')) {
-              return response.status(401).json(error.message);
+              response.status(401).json(error.message);
+              return;
             }
 
-            return response.status(400).json(`Bad Request. Error: ${error.message}`);
+            response.status(400).json(`Bad Request. Error: ${error.message}`);
+            return;
           }
 
           if (error instanceof ObjectNotFoundException) {
-            return response.status(404).json(error.message);
+            response.status(404).json(error.message);
+            return;
           }
 
-          return response.status(500).json('Internal Server Error');
+          response.status(500).json('Internal Server Error');
+          return;
         }
       },
     );
@@ -326,7 +334,7 @@ export class OrderController {
       '/v1/orders/customer/:customerId',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
       param('customerId').isUUID().withMessage('Invalid Customer ID'),
-      async (request: Request, response: Response) => {
+      async (request: Request, response: Response): Promise<void> => {
         const { customerId } = request.params;
 
         try {
@@ -353,17 +361,21 @@ export class OrderController {
             endpoint: request.url,
           });
 
-          return response.status(200).json(orders);
+          response.status(200).json(orders);
+          return;
         } catch (error) {
           if (error instanceof ControllerValidationException) {
             if (error.message.includes('Unauthorized')) {
-              return response.status(401).json(error.message);
+              response.status(401).json(error.message);
+              return;
             }
 
-            return response.status(400).json(`Bad Request. Error: ${error.message}`);
+            response.status(400).json(`Bad Request. Error: ${error.message}`);
+            return;
           }
 
-          return response.status(500).json('Internal Server Error');
+          response.status(500).json('Internal Server Error');
+          return;
         }
       },
     );
@@ -428,7 +440,7 @@ export class OrderController {
       param('status')
         .custom(status => (OrderStatus.isValidStatus(status) ? true : false))
         .withMessage('Invalid Status'),
-      async (request: Request, response: Response) => {
+      async (request: Request, response: Response): Promise<void> => {
         const { status } = request.params;
 
         try {
@@ -455,17 +467,21 @@ export class OrderController {
             endpoint: request.url,
           });
 
-          return response.status(200).json(orders);
+          response.status(200).json(orders);
+          return;
         } catch (error) {
           if (error instanceof ControllerValidationException) {
             if (error.message.includes('Unauthorized')) {
-              return response.status(401).json(error.message);
+              response.status(401).json(error.message);
+              return;
             }
 
-            return response.status(400).json(`Bad Request. Error: ${error.message}`);
+            response.status(400).json(`Bad Request. Error: ${error.message}`);
+            return;
           }
 
-          return response.status(500).json('Internal Server Error');
+          response.status(500).json('Internal Server Error');
+          return;
         }
       },
     );
@@ -540,7 +556,7 @@ export class OrderController {
         .custom(status => (OrderStatus.isValidStatus(status) ? true : false))
         .withMessage('Invalid Status')
         .optional(),
-      async (request: Request, response: Response) => {
+      async (request: Request, response: Response): Promise<void> => {
         const { customerId, orderId, orderDate, orderItems, status } = request.body;
 
         try {
@@ -575,21 +591,26 @@ export class OrderController {
             endpoint: request.url,
           });
 
-          return response.status(200).json(order);
+          response.status(200).json(order);
+          return;
         } catch (error) {
           if (error instanceof ControllerValidationException) {
             if (error.message.includes('Unauthorized')) {
-              return response.status(401).json(error.message);
+              response.status(401).json(error.message);
+              return;
             }
 
-            return response.status(400).json(`Bad Request. Error: ${error.message}`);
+            response.status(400).json(`Bad Request. Error: ${error.message}`);
+            return;
           }
 
           if (error instanceof InvalidOrderStatusException) {
-            return response.status(400).json(`Bad Request. Error: ${error.message}`);
+            response.status(400).json(`Bad Request. Error: ${error.message}`);
+            return;
           }
 
-          return response.status(500).json('Internal Server Error');
+          response.status(500).json('Internal Server Error');
+          return;
         }
       },
     );
@@ -653,7 +674,7 @@ export class OrderController {
       param('orderId')
         .custom(orderId => (Order.validateOrderId(orderId) ? true : false))
         .withMessage('Invalid Order ID'),
-      async (request: Request, response: Response) => {
+      async (request: Request, response: Response): Promise<void> => {
         const { orderId } = request.params;
 
         try {
@@ -680,17 +701,21 @@ export class OrderController {
             endpoint: request.url,
           });
 
-          return response.status(200).json(`${orderId} successfully cancelled`);
+          response.status(200).json(`${orderId} successfully cancelled`);
+          return;
         } catch (error) {
           if (error instanceof ControllerValidationException) {
             if (error.message.includes('Unauthorized')) {
-              return response.status(401).json(error.message);
+              response.status(401).json(error.message);
+              return;
             }
 
-            return response.status(400).json(`Bad Request. Error: ${error.message}`);
+            response.status(400).json(`Bad Request. Error: ${error.message}`);
+            return;
           }
 
-          return response.status(500).json('Internal Server Error');
+          response.status(500).json('Internal Server Error');
+          return;
         }
       },
     );

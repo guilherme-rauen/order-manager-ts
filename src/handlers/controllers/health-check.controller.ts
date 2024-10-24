@@ -11,8 +11,9 @@ export class HealthCheckController {
   }
 
   private initializeRoutes(): void {
-    this.router.get('/', (_request: Request, response: Response) => {
-      return response.status(200).json(packageJson.description);
+    this.router.get('/', (_request: Request, response: Response): void => {
+      response.status(200).json(packageJson.description);
+      return;
     });
   }
 }

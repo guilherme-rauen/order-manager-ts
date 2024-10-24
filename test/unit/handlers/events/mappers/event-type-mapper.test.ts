@@ -75,8 +75,6 @@ describe('EventTypeMapper', () => {
       orderId: 'order-id',
     });
 
-    expect(() => mapper.mapToEvent(data)).toThrow(
-      `Event type not found for: ${data.constructor.name}`,
-    );
+    expect(() => mapper.mapToEvent(data)).toThrow('Event type not found');
   });
 });

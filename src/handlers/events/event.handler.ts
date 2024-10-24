@@ -66,6 +66,10 @@ export class EventHandler implements IEventHandler {
 
       return;
     } catch (error) {
+      this.logger.error('Error handling Order Cancelled', {
+        module: this.module,
+        originalError: error,
+      });
       return;
     }
   }
@@ -82,6 +86,10 @@ export class EventHandler implements IEventHandler {
 
       return;
     } catch (error) {
+      this.logger.error('Error handling Order Confirmed', {
+        module: this.module,
+        originalError: error,
+      });
       return;
     }
   }
@@ -98,6 +106,10 @@ export class EventHandler implements IEventHandler {
 
       return;
     } catch (error) {
+      this.logger.error('Error handling Order Delivered', {
+        module: this.module,
+        originalError: error,
+      });
       return;
     }
   }
@@ -114,6 +126,10 @@ export class EventHandler implements IEventHandler {
 
       return;
     } catch (error) {
+      this.logger.error('Error handling Order Shipped', {
+        module: this.module,
+        originalError: error,
+      });
       return;
     }
   }

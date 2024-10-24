@@ -114,7 +114,7 @@ export class WebhookController {
     this.router.post(
       '/v1/webhook/payment',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
-      (request: Request, response: Response) => {
+      (request: Request, response: Response): void => {
         const { body, url } = request;
         const { amount, provider, referenceId, status, transactionId } = body;
 
@@ -146,10 +146,12 @@ export class WebhookController {
 
           this.eventHandler.emitEvent(event);
 
-          return response.status(204).send();
+          response.status(204).send();
+          return;
         } catch (error) {
           if (error instanceof ControllerValidationException) {
-            return response.status(401).json(error.message);
+            response.status(401).json(error.message);
+            return;
           }
 
           this.logger.error('Error processing payment webhook', {
@@ -159,9 +161,8 @@ export class WebhookController {
             error,
           });
 
-          return response
-            .status(500)
-            .send('Error processing payment webhook. Please try again later.');
+          response.status(500).send('Error processing payment webhook. Please try again later.');
+          return;
         }
       },
     );
@@ -211,7 +212,7 @@ export class WebhookController {
     this.router.post(
       '/v1/webhook/shipment',
       header('x-api-key').equals(API_SECRET).withMessage('Unauthorized'),
-      (request: Request, response: Response) => {
+      (request: Request, response: Response): void => {
         const { body, url } = request;
         const { carrier, orderId, status, trackingCode } = body;
 
@@ -242,10 +243,12 @@ export class WebhookController {
 
           this.eventHandler.emitEvent(event);
 
-          return response.status(204).send();
+          response.status(204).send();
+          return;
         } catch (error) {
           if (error instanceof ControllerValidationException) {
-            return response.status(401).json(error.message);
+            response.status(401).json(error.message);
+            return;
           }
 
           this.logger.error('Error processing shipping webhook', {
@@ -255,9 +258,8 @@ export class WebhookController {
             error,
           });
 
-          return response
-            .status(500)
-            .send('Error processing shipping webhook. Please try again later.');
+          response.status(500).send('Error processing shipping webhook. Please try again later.');
+          return;
         }
       },
     );
