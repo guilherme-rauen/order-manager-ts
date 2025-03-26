@@ -236,7 +236,7 @@ export class OrderRepository implements IOrderRepository {
     try {
       const { orderId } = order;
       const orderModel = this.mapper.mapToModel(order);
-      const existentOrder = await this.repository.findOne({ orderId });
+      const existentOrder = await this.repository.findOne({ orderId: { $eq: orderId } });
 
       if (existentOrder) {
         if (controllerOrigin) {
