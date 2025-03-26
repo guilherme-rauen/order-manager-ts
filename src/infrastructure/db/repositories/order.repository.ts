@@ -73,9 +73,11 @@ export class OrderRepository implements IOrderRepository {
   private async update(order: IOrder): Promise<Order> {
     try {
       const { orderId } = order;
-      const updatedOrder = await this.repository.findOneAndUpdate({ orderId }, order, {
-        new: true,
-      });
+      const updatedOrder = await this.repository.findOneAndUpdate(
+        { orderId: { $eq: orderId } },
+        order,
+        { new: true },
+      );
 
       if (!updatedOrder) {
         throw new ObjectNotFoundException(this.model, order.orderId);
@@ -153,7 +155,7 @@ export class OrderRepository implements IOrderRepository {
    */
   public async getOrderById(orderId: string): Promise<Order> {
     try {
-      const order = await this.repository.findOne({ orderId });
+      const order = await this.repository.findOne({ orderId: { $eq: orderId } });
       if (!order) {
         throw new ObjectNotFoundException(this.model, orderId);
       }
@@ -204,7 +206,7 @@ export class OrderRepository implements IOrderRepository {
    */
   public async remove(orderId: string): Promise<void> {
     try {
-      const deletedOrder = await this.repository.findOneAndDelete({ orderId });
+      const deletedOrder = await this.repository.findOneAndDelete({ orderId: { $eq: orderId } });
       if (!deletedOrder) {
         throw new ObjectNotFoundException(this.model, orderId);
       }
